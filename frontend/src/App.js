@@ -3,7 +3,7 @@ import React from 'react';
 function App() {
   return (
     <div style={{ textAlign: 'center', marginTop: '4rem' }}>
-      <h1>Hola mundo — build automático activo 🚀</h1>
+      <h1>Hola mundo 🚀 — Deploy automático confirmado</h1>
       <p>Tu MVP educativo generado por IA está en marcha.</p>
     </div>
   );
