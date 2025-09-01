@@ -1,59 +1,40 @@
-export default function App() {
-  return (
-    <main style={{
-      fontFamily: 'Inter, sans-serif',
-      backgroundColor: '#f9fafb',
-      color: '#111827',
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem'
-    }}>
-      {/* Hero */}
-      <section style={{ textAlign: 'center', maxWidth: '600px' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          AI Edu Project 🎓
-        </h1>
-        <h1 className="text-3xl font-bold underline">
-          Hola Tailwind
-        </h1>
-        <h2 style={{ fontSize: '1.25rem', color: '#4b5563', marginBottom: '2rem' }}>
-          Aprendizaje personalizado impulsado por IA
-        </h2>
-        <p style={{ fontSize: '1rem', color: '#374151', marginBottom: '2rem' }}>
-          Crea, evalúa y certifica cursos de forma automática con tecnología modular y escalable.
-        </p>
-        <button style={{
-          backgroundColor: '#2563eb',
-          color: '#fff',
-          padding: '0.75rem 1.5rem',
-          borderRadius: '0.5rem',
-          border: 'none',
-          fontSize: '1rem',
-          cursor: 'pointer'
-        }}>
-          Probar demo
-        </button>
-      </section>
+<div className="container py-5">
+  <header className="text-center mb-5 py-5 bg-light rounded shadow-sm">
+  <h1 className="display-4 fw-bold text-primary">AI EdTech Platform</h1>
+  <p className="lead text-secondary">Aprende más rápido con inteligencia artificial</p>
+  <a href="#cta" className="btn btn-primary btn-lg mt-3 px-4">Comenzar ahora</a>
+</header>
 
-      {/* Beneficios */}
-      <section style={{ marginTop: '4rem', maxWidth: '800px' }}>
-        <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          ¿Por qué elegirnos?
-        </h3>
-        <ul style={{ listStyle: 'none', padding: 0, color: '#374151' }}>
-          <li>✅ Cursos generados por IA adaptados a cada estudiante</li>
-          <li>✅ Evaluaciones automáticas con retroalimentación inmediata</li>
-          <li>✅ Certificación digital al completar el curso</li>
-        </ul>
-      </section>
 
-      {/* Footer */}
-      <footer style={{ marginTop: '4rem', fontSize: '0.875rem', color: '#6b7280' }}>
-        Última actualización: {new Date().toLocaleString()}
-      </footer>
-    </main>
-  );
-}
+  <section className="row g-4">
+    <div className="col-md-4">
+      <div className="card h-100 shadow-sm">
+        <div className="card-body">
+          <h5 className="card-title">Aprendizaje Personalizado</h5>
+          <p className="card-text">Contenido adaptado a tu ritmo y estilo de aprendizaje.</p>
+        </div>
+      </div>
+    </div>
+    <div className="col-md-4">
+      <div className="card h-100 shadow-sm">
+        <div className="card-body">
+          <h5 className="card-title">Recursos Interactivos</h5>
+          <p className="card-text">Ejercicios y evaluaciones en tiempo real.</p>
+        </div>
+      </div>
+    </div>
+    <div className="col-md-4">
+      <div className="card h-100 shadow-sm">
+        <div className="card-body">
+          <h5 className="card-title">Progreso Medible</h5>
+          <p className="card-text">Estadísticas claras para seguir tu avance.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cta" className="text-center mt-5">
+    <h2>¿Listo para empezar?</h2>
+    <a href="#" className="btn btn-success btn-lg mt-3">Crear cuenta</a>
+  </section>
+</div>
