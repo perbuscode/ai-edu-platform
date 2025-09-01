@@ -1,0 +1,11 @@
+ai-edu-platform/
+├── frontend/
+│   └── README.md (por ahora vacío)
+├── backend/
+│   └── README.md (por ahora vacío)
+├── data/
+│   └── prompts.md (luego pondremos ejemplos de entrada para IA)
+├── docs/
+│   └── business-model-canvas.md (te lo preparo yo ahora)
+├── README.md (te doy el contenido abajo)
+└── .gitignore
