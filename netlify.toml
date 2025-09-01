@@ -7,6 +7,5 @@
   NODE_VERSION = "18"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# Cache de dependencias para acelerar builds
-[[plugins]]
-  package = "@netlify/plugin-cache"
+# [[plugins]]
+#   package = "@netlify/plugin-cache"
