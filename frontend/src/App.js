@@ -16,6 +16,9 @@ export default function App() {
         <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
           AI Edu Project 🎓
         </h1>
+        <h1 className="text-3xl font-bold underline">
+          Hola Tailwind
+        </h1>
         <h2 style={{ fontSize: '1.25rem', color: '#4b5563', marginBottom: '2rem' }}>
           Aprendizaje personalizado impulsado por IA
         </h2>
