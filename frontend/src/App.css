@@ -1,0 +1,59 @@
+/* Layout general */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: #0f172a;
+  width: 240px;
+  color: #fff;
+}
+
+.sidebar h2 {
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+
+.sidebar a {
+  text-decoration: none;
+  color: #cbd5e1;
+  transition: color 0.2s ease;
+}
+
+.sidebar a:hover {
+  color: #3b82f6;
+}
+
+/* Contenido principal */
+.main-content {
+  flex: 1;
+  background-color: #f9fafb;
+}
+
+/* Tarjetas */
+.main-content .border {
+  background-color: #fff;
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.main-content h3 {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+/* Ajustes para móvil */
+@media (max-width: 767.98px) {
+  .sidebar {
+    display: none !important;
+  }
+  .main-content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
