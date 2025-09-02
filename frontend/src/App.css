@@ -1,59 +1,329 @@
-/* Layout general */
+/* ================================
+   Variables y fundamentos
+   ================================ */
+:root {
+  --color-bg: #f8f9fa;
+  --color-sidebar-bg: #1e293b;
+  --color-sidebar-text: #e2e8f0;
+  --color-accent: #38bdf8;
+  --color-dark: #0f172a;
+  --color-card-bg: #ffffff;
+  --color-card-hover: #f1f5f9;
+
+  --radius: 8px;
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 6px 12px rgba(0, 0, 0, 0.1);
+
+  --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  background-color: var(--color-bg);
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Enlaces base */
+a {
+  color: var(--color-dark);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+/* Alinear color de utilidades con la paleta */
+.text-primary {
+  color: var(--color-accent) !important;
+}
+
+/* ================================
+   Layout principal
+   ================================ */
 .app-container {
   display: flex;
   min-height: 100vh;
-  overflow-x: hidden;
-  font-family: 'Inter', sans-serif;
+  background-color: var(--color-bg);
 }
 
-/* Sidebar */
+/* ================================
+   Sidebar
+   ================================ */
 .sidebar {
-  background-color: #0f172a;
   width: 240px;
-  color: #fff;
+  background-color: var(--color-sidebar-bg);
+  color: var(--color-sidebar-text);
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .sidebar h2 {
-  font-weight: 700;
   font-size: 1.4rem;
+  font-weight: bold;
+  margin: 0 0 1rem 0;
+  color: var(--color-sidebar-text);
 }
 
-.sidebar a {
+.sidebar .nav-link {
+  color: var(--color-sidebar-text);
+  padding: 0.5rem 0;
   text-decoration: none;
-  color: #cbd5e1;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, transform 0.15s ease;
+  display: inline-flex;
+  align-items: center;
 }
 
-.sidebar a:hover {
-  color: #3b82f6;
+.sidebar .nav-link:hover {
+  color: var(--color-accent);
+  transform: translateX(2px);
 }
 
-/* Contenido principal */
+.sidebar footer {
+  font-size: 0.8rem;
+  color: var(--color-sidebar-text);
+  border-top: 1px solid rgba(226, 232, 240, 0.15) !important;
+}
+
+.sidebar footer a {
+  color: var(--color-accent);
+}
+
+.sidebar footer a:hover {
+  text-decoration: underline;
+}
+
+/* ================================
+   Contenido principal
+   ================================ */
 .main-content {
   flex: 1;
-  background-color: #f9fafb;
+  padding: 1.5rem;
+  background-color: var(--color-bg);
 }
 
-/* Tarjetas */
-.main-content .border {
-  background-color: #fff;
+/* ================================
+   Componentes: tarjetas
+   ================================ */
+.card-custom {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  border: 1px solid rgba(2, 6, 23, 0.04);
+}
+
+.card-custom:hover {
+  background-color: var(--color-card-hover);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.card-custom h3,
+.card-custom h4 {
+  margin-bottom: 0.5rem;
+}
+
+/* ================================
+   Sección: Hero
+   ================================ */
+.hero {
+  background: linear-gradient(135deg, var(--color-accent) 0%, #0ea5e9 100%);
+  color: #ffffff;
+  border-radius: var(--radius);
+  padding: 3rem 1rem;
+  margin-bottom: 3rem;
+}
+
+.hero .lead {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.hero .btn-primary {
+  background-color: var(--color-dark);
   border: none;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
-.main-content h3 {
-  color: #3b82f6;
-  font-weight: 600;
+.hero .btn-primary:hover,
+.hero .btn-primary:focus {
+  background-color: #111827;
 }
 
-/* Ajustes para móvil */
-@media (max-width: 767.98px) {
+/* ================================
+   Sección: Beneficios
+   ================================ */
+.benefits {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.benefits h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ================================
+   Sección: Cursos destacados
+   ================================ */
+.featured-courses {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.featured-courses h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.featured-courses img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+/* ================================
+   Sección: Testimonios
+   ================================ */
+.testimonials {
+  background-color: #eef2f7; /* sutil diferencia de fondo */
+  border-radius: var(--radius);
+  padding: 2rem 1rem;
+}
+
+.testimonials h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+/* ================================
+   Footer extendido
+   ================================ */
+.footer-extended {
+  border-top: 1px solid rgba(2, 6, 23, 0.06) !important;
+  margin-top: 3rem;
+}
+
+.footer-extended h5,
+.footer-extended h6 {
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.footer-extended ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footer-extended ul li {
+  margin-bottom: 0.4rem;
+}
+
+.footer-extended a {
+  color: var(--color-dark);
+}
+
+.footer-extended a:hover {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+/* ================================
+   Botones (armonizar con paleta)
+   ================================ */
+.btn-primary {
+  background-color: var(--color-dark);
+  border-color: var(--color-dark);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #111827;
+  border-color: #111827;
+}
+
+.btn-outline-primary {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  color: #ffffff;
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* ================================
+   Estados de foco y accesibilidad
+   ================================ */
+:focus-visible {
+  outline: 3px solid rgba(56, 189, 248, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ================================
+   Responsividad
+   ================================ */
+@media (max-width: 991.98px) {
   .sidebar {
-    display: none !important;
+    width: 220px;
   }
+}
+
+@media (max-width: 767.98px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: relative;
+    height: auto;
+    width: 100%;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.15);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
   .main-content {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding: 1rem;
+  }
+
+  .featured-courses img {
+    height: 160px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hero {
+    padding: 2rem 1rem;
+  }
+
+  .featured-courses img {
+    height: 140px;
   }
 }
