@@ -1,40 +1,13 @@
-.app-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.main-content {
-  margin-left: 240px;
-  padding-top: 80px;
-}
-
-/* Estilo Navbar */
-.navbar-custom {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  background-color: #fff;
-  z-index: 1000;
-}
-
-.navbar-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #0d6efd;
-}
-
-/* Sidebar */
 .sidebar-custom {
   position: fixed;
   top: 60px;
   left: 0;
   width: 240px;
-  height: 100%;
+  height: 100vh;
   background-color: #0d6efd;
   color: #fff;
+  transition: width 0.3s ease;
   padding-top: 1rem;
-  transition: width 0.3s;
   z-index: 999;
 }
 
@@ -47,6 +20,7 @@
   text-align: right;
   padding: 0 1rem;
   cursor: pointer;
+  font-size: 1.2rem;
 }
 
 .sidebar-custom .nav-link {
@@ -55,14 +29,10 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  text-decoration: none;
+  transition: background-color 0.2s;
 }
 
 .sidebar-custom .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Footer */
-.footer-custom {
-  background-color: #0d6efd;
-  color: #fff;
 }

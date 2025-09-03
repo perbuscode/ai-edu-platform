@@ -1,0 +1,14 @@
+.navbar-custom {
+  background-color: #ffffff;
+  border-bottom: 1px solid #eaeaea;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.navbar-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #0d6efd;
+}
