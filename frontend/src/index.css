@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Reset/opcional para fuentes y color base del body */
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-900 text-slate-100 antialiased;
+}
+
+/* Contenedores y títulos por defecto (opcional) */
+h1, h2, h3, h4, h5 {
+  @apply text-slate-900;
+}
+

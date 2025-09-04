@@ -1,119 +1,47 @@
+﻿// src/components/Testimonials.jsx
 import React from "react";
-import { FaStar } from "react-icons/fa";
-import PlanDemoModal from "./PlanDemoModal";
 
-function Stars({ n = 5 }) {
-  return (
-    <div className="flex gap-1 text-amber-400" aria-label={`${n} estrellas`}>
-      {Array.from({ length: n }).map((_, i) => (
-        <FaStar key={i} />
-      ))}
-    </div>
-  );
-}
-
-function TestimonialCard({ t }) {
-  return (
-    <article className="relative rounded-2xl bg-white border border-slate-200 shadow-xl p-6">
-      {/* Línea acento superior */}
-      <div className="absolute -top-1 left-0 right-0 h-1.5 rounded-t-2xl bg-sky-400" />
-
-      <div className="flex items-start gap-4">
-        {/* Avatar */}
-        <div className="shrink-0">
-          {t.avatar ? (
-            <img
-              src={t.avatar}
-              alt={`Foto de ${t.name}`}
-              className="size-12 rounded-full object-cover border border-slate-200"
-              onError={(e) => (e.currentTarget.style.display = "none")}
-            />
-          ) : (
-            <div className="size-12 rounded-full bg-slate-200 grid place-items-center text-slate-700 font-semibold">
-              {t.name.charAt(0)}
-            </div>
-          )}
-        </div>
-
-        {/* Contenido */}
-        <div className="min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h3 className="font-semibold text-slate-900">{t.name}</h3>
-            <span className="text-xs text-slate-500">•</span>
-            <p className="text-sm text-slate-600">{t.roleNow}</p>
-          </div>
-
-          <p className="mt-3 text-slate-800 leading-relaxed">
-            “{t.story}”
-          </p>
-
-          <div className="mt-4 flex items-center gap-3">
-            <Stars n={5} />
-            <span className="text-xs text-slate-500">{t.context}</span>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
+const genericAvatar = encodeURI(`data:image/svg+xml;utf8,
+  <svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'>
+    <defs>
+      <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+        <stop offset='0%' stop-color='%230ea5e9'/>
+        <stop offset='100%' stop-color='%237c3aed'/>
+      </linearGradient>
+    </defs>
+    <rect width='100%' height='100%' rx='48' fill='url(%23g)'/>
+    <g fill='white' opacity='0.9' transform='translate(20,20)'>
+      <circle cx='28' cy='20' r='12'/>
+      <path d='M8 48c0-11 9-20 20-20s20 9 20 20v4H8v-4z'/>
+    </g>
+  </svg>`);
 
 export default function Testimonials() {
-  const data = [
-    {
-      name: "Laura P.",
-      roleNow: "BI Analyst en fintech",
-      story:
-        "Llegué sin saber nada de Power BI. En 5 semanas tenía un dashboard presentable y dos proyectos en mi portafolio. Me llamaron a entrevista por el proyecto final.",
-      context: "Plan: Power BI · 5 semanas",
-      avatar: "/images/avatars/laura.jpg",
-    },
-    {
-      name: "Carlos M.",
-      roleNow: "Frontend Dev (React) en startup",
-      story:
-        "El plan me quitó la ansiedad de elegir cursos. Solo seguí los bloques y construí un proyecto por semana. En la entrevista me pidieron el repo del portfolio.",
-      context: "Plan: Frontend con React · 8 semanas",
-      avatar: "/images/avatars/carlos.jpg",
-    },
-    {
-      name: "Ana G.",
-      roleNow: "Emprendedora — ecommerce",
-      story:
-        "Yo no buscaba empleo, quería vender más. La ruta me dio lo justo: analytics, anuncios y automatizaciones. En 30 días tripliqué visitas con un dashboard simple.",
-      context: "Plan: Marketing + NoCode · 4 semanas",
-      avatar: "/images/avatars/ana.jpg",
-    },
+  const items = [
+    { text: "Conseguí mi primer rol de BI mostrando dashboards de alto impacto en entrevistas.", author: "Ana González", country: "🇨🇴 Colombia", course: "Analista de Datos (Power BI)" },
+    { text: "Pasé de dudar a construir y lanzar microproyectos cada semana.", author: "Carlos Medina", country: "🇲🇽 México", course: "Aprender a programar" },
+    { text: "Me sentí acompañada y evaluada con criterios claros hasta lograr mi objetivo.", author: "Laura Pérez", country: "🇪🇸 España", course: "Cursos de idiomas" },
   ];
 
   return (
-    <section className="bg-white">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-16">
-        <div className="max-w-3xl">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
-            Lo que dicen quienes probaron el plan
-          </h2>
-          <p className="text-slate-600 mt-2">
-            Historias reales y enfocadas en resultados: portfolio, entrevistas y crecimiento del negocio.
-          </p>
-        </div>
-
+    <section className="py-12 md:py-16 bg-slate-800">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <h2 className="text-2xl md:text-3xl font-bold text-white">Historias reales de avance</h2>
         <div className="mt-8 grid gap-6 md:grid-cols-3">
-          {data.map((t, i) => (
-            <TestimonialCard key={i} t={t} />
+          {items.map((t, i) => (
+            <article key={i} className="bg-white rounded-2xl p-5 shadow-xl border border-slate-200">
+              <div className="flex items-center gap-3">
+                <img src={genericAvatar} alt={`Avatar genérico`} className="w-12 h-12 rounded-full ring-1 ring-slate-200" />
+                <div>
+                  <div className="font-semibold text-slate-900">{t.author}</div>
+                  <div className="text-xs text-slate-600">{t.country} • {t.course}</div>
+                </div>
+              </div>
+              <p className="mt-4 text-slate-800 text-[15px] leading-relaxed">
+                “{t.text}”
+              </p>
+            </article>
           ))}
-        </div>
-
-        {/* CTA al final */}
-        <div className="mt-8 flex flex-wrap gap-3">
-          <a
-            href="#plan"
-            className="inline-block px-5 py-3 rounded-lg bg-sky-600 text-white font-semibold shadow-md hover:bg-sky-500 focus:ring-2 focus:ring-sky-400 focus:outline-none transition"
-          >
-            🚀 Generar mi plan ahora
-          </a>
-
-          {/* Ahora abrimos el demo en modal (igual que en HowItWorks) */}
-          <PlanDemoModal label="Ver plan de ejemplo" variant="outline" />
         </div>
       </div>
     </section>

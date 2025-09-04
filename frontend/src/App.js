@@ -1,63 +1,44 @@
-import React, { useState } from "react";
+// src/App.js
+import React, { useEffect, useState } from "react";
+
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import ValueSection from "./components/ValueSection";
-import ChatPlanner from "./components/ChatPlanner";      // 👈 NUEVO (chat)
 import Courses from "./components/Courses";
 import Testimonials from "./components/Testimonials";
-import ContactSection from "./components/ContactSection";
+import ChatPlanner from "./components/ChatPlanner";
 import Footer from "./components/Footer";
-import ChatWidget from "./components/ChatWidget";
-import Modal from "./components/Modal";
-import LoginForm from "./components/LoginForm";
-import RegisterForm from "./components/RegisterForm";
-import HowItWorks from "./components/HowItWorks";
-import FinalCTA from "./components/FinalCTA";
-import ExamplePlanButton from "./components/ExamplePlanButton";
+import FAQ from "./components/FAQ";
+import PlanExampleModal from "./components/PlanExampleModal";
 
-function App() {
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
+export default function App() {
+  const [openExample, setOpenExample] = useState(false);
+
+  // Open example plan modal when chat auto-generates the plan
+  useEffect(() => {
+    const onOpen = () => setOpenExample(true);
+    window.addEventListener("open-example-plan", onOpen);
+    return () => window.removeEventListener("open-example-plan", onOpen);
+  }, []);
 
   return (
-    <div className="bg-slate-900">
-      <Navbar
-        onOpenLogin={() => setShowLogin(true)}
-        onOpenRegister={() => setShowRegister(true)}
-      />
+    <div className="bg-slate-900 min-h-screen">
+      <Navbar />
+      <main>
+        <Hero onOpenExample={() => setOpenExample(true)} />
+        <ValueSection />
+        <Courses />
+        <Testimonials />
+        <ChatPlanner />
+      </main>
 
-      <Hero />
-      <ValueSection />
-      {/* Conversacional: genera el plan vía chat */}
-      <HowItWorks />
-      <Testimonials />
-      <Courses />
-      <ChatPlanner />
-      <ContactSection />
-      <FinalCTA />
-      <Footer />
+      <Footer onOpenExample={() => setOpenExample(true)} />
 
-      {/* Widget flotante de preguntas (sigue igual) */}
-      <ChatWidget />
+      {/* FAQ flotante (cerrado por defecto) */}
+      <FAQ />
 
-      {/* Modales de Auth */}
-      <Modal
-        open={showLogin}
-        title="Iniciar sesión"
-        onClose={() => setShowLogin(false)}
-      >
-        <LoginForm onSubmit={() => setShowLogin(false)} />
-      </Modal>
-
-      <Modal
-        open={showRegister}
-        title="Crear cuenta"
-        onClose={() => setShowRegister(false)}
-      >
-        <RegisterForm onSubmit={() => setShowRegister(false)} />
-      </Modal>
+      {/* Modal plan de ejemplo */}
+      <PlanExampleModal open={openExample} onClose={() => setOpenExample(false)} />
     </div>
   );
 }
-
-export default App;
