@@ -29,4 +29,11 @@ h1, h2, h3, h4, h5 {
 @media (min-width:1024px){
   .with-sidebar-expanded { margin-left: 16rem; } /* w-64 */
   .with-sidebar-collapsed { margin-left: 3rem; }  /* w-12 */
+  /* Suaviza el cambio de margen del contenedor principal al abrir/cerrar sidebar */
+  #app { transition: margin-left .2s ease; }
 }
+
+/* Animación de ancho del sidebar (cuando colapsa/expande) */
+#sidebar { transition: width .2s ease, transform .2s ease; }
+#sidebar.collapsed { width: 3rem; }
+#sidebar.expanded { width: 16rem; }

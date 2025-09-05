@@ -17,7 +17,14 @@ export default function Dashboard() {
   const [step, setStep] = useState(1);
   const [courseTitle, setCourseTitle] = useState('Nombre del curso');
 
-  const isMobile = () => (typeof window !== 'undefined' ? window.innerWidth < 1024 : false);
+  const [mobile, setMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 1024 : false));
+  useEffect(() => {
+    function onResize() {
+      setMobile(typeof window !== 'undefined' ? window.innerWidth < 1024 : false);
+    }
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -126,8 +133,8 @@ export default function Dashboard() {
       )}
 
       {/* Overlay mobile */}
-      {sidebarMode === 'expanded' && (
-        <div id="sidebar-overlay" onClick={() => (isMobile() ? hideSidebar() : null)} className={`fixed inset-0 z-30 bg-black/40 ${isMobile() ? '' : 'hidden'}`} />
+      {sidebarMode === 'expanded' && mobile && (
+        <div id="sidebar-overlay" onClick={hideSidebar} className="fixed inset-0 z-30 bg-black/40" />
       )}
 
       {/* App wrapper */}
