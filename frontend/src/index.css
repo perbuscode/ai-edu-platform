@@ -13,6 +13,20 @@ body {
 
 /* Contenedores y títulos por defecto (opcional) */
 h1, h2, h3, h4, h5 {
-  @apply text-slate-900;
+  /* En tema oscuro, títulos claros por defecto */
+  @apply text-slate-100;
 }
 
+/* Dashboard prototype helpers (ported to React) */
+:root { color-scheme: light dark; }
+.gradient-bg { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); }
+.card-hover { transition: transform .25s ease, box-shadow .25s ease; }
+.card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0/0.1), 0 10px 10px -5px rgb(0 0 0/0.04); }
+.bar-green { background: linear-gradient(90deg,#4ade80 0%,#22c55e 100%); }
+.chip { border: 1px solid rgb(229 231 235); }
+.step-dot { width: 24px; height: 24px; }
+
+@media (min-width:1024px){
+  .with-sidebar-expanded { margin-left: 16rem; } /* w-64 */
+  .with-sidebar-collapsed { margin-left: 3rem; }  /* w-12 */
+}
