@@ -222,6 +222,7 @@ function FormFooter({ submitting, submitLabel, onGoogle, showGoogle }) {
 }
 
 function LoginForm({ firstFieldRef, submitting, setSubmitting, onSuccess, errorFromContext, onLogin, onLoginWithGoogle }) {
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
@@ -242,7 +243,7 @@ function LoginForm({ firstFieldRef, submitting, setSubmitting, onSuccess, errorF
       await onLogin({ email, password });
       onSuccess?.();
     } catch (err) {
-      // error ya mapeado
+      toast.error(errorFromContext || err.message || "Error al iniciar sesión");
     } finally {
       setSubmitting(false);
     }
@@ -259,6 +260,7 @@ function LoginForm({ firstFieldRef, submitting, setSubmitting, onSuccess, errorF
 }
 
 function RegisterForm({ firstFieldRef, submitting, setSubmitting, onSuccess, errorFromContext, onRegister }) {
+  const toast = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -286,7 +288,7 @@ function RegisterForm({ firstFieldRef, submitting, setSubmitting, onSuccess, err
       await onRegister({ name, email, password, photoURL: photoURL || undefined });
       onSuccess?.();
     } catch (err) {
-      // error ya mapeado en context
+      toast.error(errorFromContext || err.message || "Error al registrarse");
     } finally {
       setSubmitting(false);
     }
@@ -315,6 +317,7 @@ function RegisterForm({ firstFieldRef, submitting, setSubmitting, onSuccess, err
 }
 
 function ResetForm({ firstFieldRef, submitting, setSubmitting, onSuccess, errorFromContext, onReset }) {
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState({});
 
@@ -333,7 +336,7 @@ function ResetForm({ firstFieldRef, submitting, setSubmitting, onSuccess, errorF
       await onReset(email);
       onSuccess?.();
     } catch (err) {
-      // error ya mapeado
+      toast.error(errorFromContext || err.message || "No se pudo enviar el correo de recuperación");
     } finally {
       setSubmitting(false);
     }

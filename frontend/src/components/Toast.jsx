@@ -11,6 +11,7 @@ function createToast(message, type = "info", duration = 3000) {
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const timeouts = useRef(new Map());
+  const lastRef = useRef({ msg: null, type: null, at: 0 });
 
   const remove = useCallback((id) => {
     setToasts((t) => t.filter((x) => x.id !== id));
@@ -20,10 +21,16 @@ export function ToastProvider({ children }) {
   }, []);
 
   const push = useCallback((message, type = "info", duration = 3000) => {
+    const now = Date.now();
+    const last = lastRef.current;
+    if (last.msg === message && last.type === type && now - last.at < 1500) {
+      return null; // evitar duplicado inmediato
+    }
     const t = createToast(message, type, duration);
     setToasts((prev) => [...prev, t]);
     const to = setTimeout(() => remove(t.id), duration);
     timeouts.current.set(t.id, to);
+    lastRef.current = { msg: message, type, at: now };
     return t.id;
   }, [remove]);
 
@@ -78,4 +85,3 @@ export function useToast() {
   if (!ctx) throw new Error("useToast debe usarse dentro de <ToastProvider>");
   return ctx;
 }
-
