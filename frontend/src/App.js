@@ -1,5 +1,6 @@
 // src/App.js
 import React, { useEffect, useState } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -10,11 +11,13 @@ import ChatPlanner from "./components/ChatPlanner";
 import Footer from "./components/Footer";
 import FAQ from "./components/FAQ";
 import PlanExampleModal from "./components/PlanExampleModal";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 
-export default function App() {
+function Landing() {
   const [openExample, setOpenExample] = useState(false);
 
-  // Open example plan modal when chat auto-generates the plan
   useEffect(() => {
     const onOpen = () => setOpenExample(true);
     window.addEventListener("open-example-plan", onOpen);
@@ -22,8 +25,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="bg-slate-900 min-h-screen">
-      <Navbar />
+    <>
       <main>
         <Hero onOpenExample={() => setOpenExample(true)} />
         <ValueSection />
@@ -31,14 +33,38 @@ export default function App() {
         <Testimonials />
         <ChatPlanner />
       </main>
-
       <Footer onOpenExample={() => setOpenExample(true)} />
-
-      {/* FAQ flotante (cerrado por defecto) */}
       <FAQ />
-
-      {/* Modal plan de ejemplo */}
       <PlanExampleModal open={openExample} onClose={() => setOpenExample(false)} />
+    </>
+  );
+}
+
+export default function App() {
+  const location = useLocation();
+  const hideNavbar = location.pathname.startsWith("/dashboard") || location.pathname.startsWith("/profile");
+  return (
+    <div className="bg-slate-900 min-h-screen">
+      {!hideNavbar && <Navbar />}
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
     </div>
   );
 }
