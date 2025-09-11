@@ -66,11 +66,11 @@ export default function Courses() {
     setTimeout(go, 50);
   };
   return (
-    <section id="cursos" className="bg-slate-900 py-12 md:py-16">
+    <section id="cursos" className="bg-slate-900 py-8 md:py-10 scroll-mt-24 md:scroll-mt-28">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <h2 className="text-2xl md:text-3xl font-bold text-white">Cursos destacados</h2>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
+        <div className="mt-6 grid gap-6 md:grid-cols-3">
           {courses.map((c, i) => (
             <article
               key={i}
@@ -85,9 +85,9 @@ export default function Courses() {
                 <a
                   href="#plan"
                   onClick={(e)=>selectCourse(c.title, e)}
-                  className="relative inline-flex items-center justify-center mt-4 text-sm font-medium px-3 py-1.5 rounded-md border border-sky-200 text-sky-700 hover:text-white overflow-hidden transition-[color,padding] duration-200 hover:px-3.5"
+                  className="group relative inline-flex items-center justify-center mt-4 text-sm font-medium px-3 py-1.5 rounded-md border border-sky-300 hover:border-sky-700 text-sky-700 hover:text-white overflow-hidden transition-colors duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                 >
-                  <span className="absolute inset-y-0 left-0 w-0 bg-sky-600 transition-all duration-300 hover:w-full group-[&]:w-full"/>
+                  <span className="pointer-events-none absolute inset-y-0 left-0 w-0 bg-gradient-to-r from-sky-600 to-indigo-600 transition-all duration-300 ease-out group-hover:w-full"/>
                   <span className="relative z-10">Ver curso</span>
                 </a>
               </div>

@@ -45,10 +45,10 @@ export default function ValueSection() {
   ];
 
   return (
-    <section className="bg-slate-900 py-12 md:py-16">
+    <section className="bg-slate-900 py-8 md:py-10">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <h2 className="text-2xl md:text-3xl font-bold text-white">Lo que te hace avanzar</h2>
-        <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {items.map((it, i) => (
             <article
               key={i}

@@ -31,8 +31,8 @@ export default function DashboardHome({
     <div className="p-8 space-y-8">
       {/* Curso Actual */}
       <section>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Curso Actual</h3>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Curso Actual</h3>
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-3">
@@ -42,20 +42,20 @@ export default function DashboardHome({
                   </svg>
                 </div>
                 <div>
-                  <h4 className="text-xl font-semibold text-gray-900">{currentCourse.name}</h4>
-                  <p className="text-gray-600">{currentCourse.module}</p>
+                  <h4 className="text-xl font-semibold text-gray-900 dark:text-slate-100">{currentCourse.name}</h4>
+                  <p className="text-gray-600 dark:text-slate-400">{currentCourse.module}</p>
                 </div>
               </div>
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Progreso del curso</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Progreso del curso</span>
                   <span className="text-sm font-medium text-green-600">{currentCourse.progress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-slate-800 rounded-full h-2" aria-hidden="true">
                   <div className="h-2 rounded-full" style={{ width: `${currentCourse.progress}%`, background: "linear-gradient(90deg, #4ade80 0%, #22c55e 100%)" }} />
                 </div>
               </div>
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-slate-400">
                 <span>⏱️ {currentCourse.remaining}</span>
                 <span>📚 {currentCourse.lesson}</span>
               </div>
@@ -70,9 +70,9 @@ export default function DashboardHome({
       {/* Grid Secciones */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Progreso General */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-semibold text-gray-900">Progreso General</h4>
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Progreso General</h4>
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -87,9 +87,9 @@ export default function DashboardHome({
         </div>
 
         {/* Próximas Clases */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-semibold text-gray-900">Próximas Clases</h4>
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Próximas Clases</h4>
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -101,8 +101,8 @@ export default function DashboardHome({
               <div key={i} className="flex items-center space-x-3">
                 <div className={`w-2 h-2 ${u.dot} rounded-full`} />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{u.title}</p>
-                  <p className="text-xs text-gray-500">{u.when}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-slate-100">{u.title}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">{u.when}</p>
                 </div>
               </div>
             ))}
@@ -110,9 +110,9 @@ export default function DashboardHome({
         </div>
 
         {/* Materiales */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-semibold text-gray-900">Materiales</h4>
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Materiales</h4>
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -126,8 +126,8 @@ export default function DashboardHome({
                   <span className={`text-xs font-medium ${m.color}`}>{m.tag}</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{m.name}</p>
-                  <p className="text-xs text-gray-500">{m.info}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-slate-100">{m.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">{m.info}</p>
                 </div>
               </div>
             ))}
@@ -136,8 +136,8 @@ export default function DashboardHome({
       </section>
 
       {/* Actividad Reciente */}
-      <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h4>
+      <section className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-6">
+        <h4 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Actividad Reciente</h4>
         <div className="space-y-4">
           {activity.map((a, i) => (
             <div key={i} className="flex items-start space-x-4">
@@ -147,8 +147,8 @@ export default function DashboardHome({
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{a.text}</p>
-                <p className="text-xs text-gray-500">{a.time}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-slate-100">{a.text}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">{a.time}</p>
               </div>
             </div>
           ))}
@@ -161,8 +161,8 @@ export default function DashboardHome({
 function Row({ label, value }) {
   return (
     <div className="flex justify-between items-center">
-      <span className="text-sm text-gray-600">{label}</span>
-      <span className="font-semibold text-gray-900">{value}</span>
+      <span className="text-sm text-gray-600 dark:text-slate-400">{label}</span>
+      <span className="font-semibold text-gray-900 dark:text-slate-100">{value}</span>
     </div>
   );
 }

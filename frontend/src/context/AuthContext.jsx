@@ -40,6 +40,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  function cloneUser(u) {
+    if (!u) return u;
+    return Object.assign(Object.create(Object.getPrototypeOf(u)), u);
+  }
+
   useEffect(() => {
     setPersistence(auth, browserLocalPersistence).catch((e) => {
       console.debug("[Auth] setPersistence fallo", e?.code || e);
@@ -126,7 +131,25 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const value = { user, loading, error, register, login, loginWithGoogle, resetPassword, logout };
+  async function updateUserProfile(fields) {
+    setError(null);
+    try {
+      const u = auth.currentUser;
+      if (!u) throw new Error("No hay usuario autenticado");
+      await updateProfile(u, fields);
+      try { await u.reload(); } catch {}
+      setUser(cloneUser(auth.currentUser));
+      console.debug("[Auth] updateUserProfile OK", Object.keys(fields));
+      return auth.currentUser;
+    } catch (e) {
+      const msg = mapAuthError(e);
+      setError(msg);
+      console.debug("[Auth] updateUserProfile ERROR", e?.code || e, msg);
+      throw new Error(msg);
+    }
+  }
+
+  const value = { user, loading, error, register, login, loginWithGoogle, resetPassword, logout, updateUserProfile };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

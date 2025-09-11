@@ -9,19 +9,34 @@ import Courses from "./components/Courses";
 import Testimonials from "./components/Testimonials";
 import ChatPlanner from "./components/ChatPlanner";
 import Footer from "./components/Footer";
-import FAQ from "./components/FAQ";
+// FAQ flotante removido; usamos menú en Navbar
 import PlanExampleModal from "./components/PlanExampleModal";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
+import Certificates from "./pages/Certificates";
+import PortfolioProjects from "./pages/PortfolioProjects";
+import VirtualRoom from "./pages/VirtualRoom";
+import Course from "./pages/Course";
 import Profile from "./pages/Profile";
+import CV from "./pages/CV";
+import PracticeInterview from "./pages/PracticeInterview";
+import Faqs from "./pages/Faqs";
+import Pqr from "./pages/Pqr";
+import Contacto from "./pages/Contacto";
 
 function Landing() {
   const [openExample, setOpenExample] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState(null);
 
   useEffect(() => {
-    const onOpen = () => setOpenExample(true);
-    window.addEventListener("open-example-plan", onOpen);
-    return () => window.removeEventListener("open-example-plan", onOpen);
+    const onOpenExample = () => { setCurrentPlan(null); setOpenExample(true); };
+    const onOpenPlan = (ev) => { try { setCurrentPlan(ev?.detail?.plan || null); } catch {} setOpenExample(true); };
+    window.addEventListener("open-example-plan", onOpenExample);
+    window.addEventListener("open-plan-modal", onOpenPlan);
+    return () => {
+      window.removeEventListener("open-example-plan", onOpenExample);
+      window.removeEventListener("open-plan-modal", onOpenPlan);
+    };
   }, []);
 
   return (
@@ -34,20 +49,28 @@ function Landing() {
         <ChatPlanner />
       </main>
       <Footer onOpenExample={() => setOpenExample(true)} />
-      <FAQ />
-      <PlanExampleModal open={openExample} onClose={() => setOpenExample(false)} />
+      <PlanExampleModal open={openExample} onClose={() => setOpenExample(false)} plan={currentPlan} />
     </>
   );
 }
 
 export default function App() {
   const location = useLocation();
-  const hideNavbar = location.pathname.startsWith("/dashboard") || location.pathname.startsWith("/profile");
+  const hideNavbar = (
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/profile") ||
+    location.pathname.startsWith("/course") ||
+    location.pathname.startsWith("/cv") ||
+    location.pathname.startsWith("/practice")
+  );
   return (
     <div className="bg-slate-900 min-h-screen">
       {!hideNavbar && <Navbar />}
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/faqs" element={<Faqs />} />
+        <Route path="/pqr" element={<Pqr />} />
+        <Route path="/contacto" element={<Contacto />} />
         <Route
           path="/dashboard"
           element={
@@ -57,10 +80,58 @@ export default function App() {
           }
         />
         <Route
+          path="/dashboard/portafolio"
+          element={
+            <ProtectedRoute>
+              <PortfolioProjects />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/certificaciones"
+          element={
+            <ProtectedRoute>
+              <Certificates />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/salon-virtual"
+          element={
+            <ProtectedRoute>
+              <VirtualRoom />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/course"
+          element={
+            <ProtectedRoute>
+              <Course />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/profile"
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cv"
+          element={
+            <ProtectedRoute>
+              <CV />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/practice-interview"
+          element={
+            <ProtectedRoute>
+              <PracticeInterview />
             </ProtectedRoute>
           }
         />

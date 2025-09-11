@@ -39,6 +39,10 @@ export function ToastProvider({ children }) {
     info: (m, d) => push(m, "info", d),
     success: (m, d) => push(m, "success", d),
     error: (m, d) => push(m, "error", d),
+    // Atajos para errores comunes
+    offline: (msg = "Sin conexión a internet") => push(msg, "error", 3500),
+    loadError: (msg = "No se pudieron cargar los datos") => push(msg, "error", 3500),
+    forbidden: (msg = "Acción no permitida") => push(msg, "error", 3500),
   }), [push]);
 
   useEffect(() => () => {

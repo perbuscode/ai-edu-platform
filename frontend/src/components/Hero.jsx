@@ -1,17 +1,17 @@
-﻿// src/components/Hero.jsx
+// src/components/Hero.jsx
 import React from "react";
 
 export default function Hero({ onOpenExample }) {
   return (
     <section
       id="inicio"
-      className="pt-24 md:pt-28 bg-gradient-to-br from-slate-900 to-slate-800"
+      className="pt-12 md:pt-16 bg-slate-900"
     >
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-16 grid md:grid-cols-2 gap-10 items-center">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10 grid md:grid-cols-2 gap-10 items-center">
         {/* Texto principal */}
         <div className="text-center md:text-left">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
-            De “quiero aprender” a “sé hacer” en un plan claro, práctico y guiado.
+            De "quiero aprender" a "sé hacer" en un plan claro, práctico y guiado.
           </h1>
           <p className="mt-4 text-slate-300 text-lg max-w-xl mx-auto md:mx-0">
             Solo di la habilidad que quieres aprender para el empleo o empresa que quieras lograr y te entregamos un plan de estudio personalizado con{" "}
@@ -22,9 +22,12 @@ export default function Hero({ onOpenExample }) {
           <div className="mt-6 flex gap-3 justify-center md:justify-start flex-wrap">
             <a
               href="#plan"
-              className="inline-block px-6 py-3 rounded-lg bg-sky-600 text-white font-semibold shadow-md hover:bg-sky-500 focus:ring-2 focus:ring-sky-400 focus:outline-none transition"
+              onClick={(e) => { e.preventDefault(); const el = document.getElementById('plan'); if (el && el.scrollIntoView) { try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch { window.location.hash = '#plan'; } } else { window.location.hash = '#plan'; } }}
+              className="group relative inline-block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
             >
-              🚀 Generar mi plan ahora
+              <span className="relative inline-block px-6 py-3 rounded-[inherit] bg-sky-600 text-white font-semibold shadow-md transition-colors duration-200 hover:bg-sky-500">
+                Generar mi plan ahora
+              </span>
             </a>
             <button
               onClick={onOpenExample}

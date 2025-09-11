@@ -18,7 +18,7 @@ export default function CourseView({ courseName = "Nombre del curso" }) {
           <section id="tab-overview">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <article className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-6 lg:col-span-2">
-                <h3 className="text-lg font-semibold mb-4">Progreso del curso</h3>
+                <h3 className="text-lg font-semibold mb-4">Progreso del curso </h3>
                 <div className="mb-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-gray-600 dark:text-slate-300">Completado</span>
@@ -30,7 +30,7 @@ export default function CourseView({ courseName = "Nombre del curso" }) {
                 </div>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <li className="border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2">⏱️ Horas restantes: <span className="font-medium">—</span></li>
-                  <li className="border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2">📚 Lección actual: <span className="font-medium">—</span></li>
+                  <li className="border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2">📚 Leccion actual: <span className="font-medium">—</span></li>
                   <li className="border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2">📅 Próxima clase: <span className="font-medium">—</span></li>
                   <li className="border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2">🏁 ETA final: <span className="font-medium">—</span></li>
                 </ul>

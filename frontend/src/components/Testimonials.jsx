@@ -24,10 +24,10 @@ export default function Testimonials() {
   ];
 
   return (
-    <section className="py-12 md:py-16 bg-slate-800">
+    <section className="py-8 md:py-10 bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <h2 className="text-2xl md:text-3xl font-bold text-white">Historias reales de avance</h2>
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
+        <div className="mt-6 grid gap-6 md:grid-cols-3">
           {items.map((t, i) => (
             <article key={i} className="bg-white rounded-2xl p-5 shadow-xl border border-slate-200">
               <div className="flex items-center gap-3">

@@ -5,6 +5,7 @@
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 // CRA usa variables de entorno con prefijo REACT_APP_
 const firebaseConfig = {
@@ -18,6 +19,7 @@ const firebaseConfig = {
 
 // Evita reinicializar si ya existe
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+export const db = (() => { try { return getFirestore(app); } catch { return null; } })();
 
 // Opcional: fuerza idioma del Auth a dispositivo/navegador
 try {

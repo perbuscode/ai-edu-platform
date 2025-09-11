@@ -6,6 +6,24 @@ import { ToastProvider } from "./components/Toast";
 import "./index.css";
 import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { initTheme } from "./theme/applyTheme";
+
+// Aplica tema antes del primer render para evitar flash
+initTheme();
+
+// Interceptor global para enlaces con hash: scroll suave a secciones
+document.addEventListener('click', (e) => {
+  const anchor = e.target && e.target.closest && e.target.closest('a[href^="#"]');
+  if (!anchor) return;
+  const href = anchor.getAttribute('href');
+  if (!href || href === '#' || href.length < 2) return;
+  const id = href.slice(1);
+  const el = document.getElementById(id);
+  if (!el) return;
+  e.preventDefault();
+  try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  catch { window.location.hash = href; }
+});
 
 // Logs de diagnóstico para detectar instalaciones duplicadas de React
 // y confirmar versión en tiempo de ejecución.

@@ -7,6 +7,18 @@ html, body, #root {
   height: 100%;
 }
 
+/* Desplazamiento suave para anclas dentro de la landing */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Aparición suave para menús desplegables */
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.dropdown-appear { animation: dropdownIn .2s ease-out both; }
+
 body {
   @apply bg-slate-900 text-slate-100 antialiased;
 }
@@ -26,14 +38,48 @@ h1, h2, h3, h4, h5 {
 .chip { border: 1px solid rgb(229 231 235); }
 .step-dot { width: 24px; height: 24px; }
 
-@media (min-width:1024px){
-  .with-sidebar-expanded { margin-left: 16rem; } /* w-64 */
-  .with-sidebar-collapsed { margin-left: 3rem; }  /* w-12 */
-  /* Suaviza el cambio de margen del contenedor principal al abrir/cerrar sidebar */
-  #app { transition: margin-left .2s ease; }
+/* Floating assistant: soft appear animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
+.assistant-appear { animation: fadeInUp .28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* En mobile, reserva espacio para el rail colapsado (3rem) */
+.with-sidebar-collapsed { margin-left: 3rem; }  /* w-12 */
+/* Sidebar expandido también desplaza el contenido en mobile */
+.with-sidebar-expanded { margin-left: 16rem; } /* w-64 */
+/* Transición del contenedor para animar en mobile y desktop */
+#app { transition: margin-left .2s ease; }
 
 /* Animación de ancho del sidebar (cuando colapsa/expande) */
 #sidebar { transition: width .2s ease, transform .2s ease; }
 #sidebar.collapsed { width: 3rem; }
 #sidebar.expanded { width: 16rem; }
+
+/* Placeholder fixes: avoid dark shaded background on hints */
+@layer base {
+  /* Active nav helper for sidebar anchors */
+  .nav-active { background-color: rgba(255,255,255,0.08); }
+
+  /* Modern */
+  input::placeholder,
+  textarea::placeholder,
+  /* Firefox */
+  input::-moz-placeholder,
+  textarea::-moz-placeholder,
+  /* Edge */
+  input::-ms-input-placeholder,
+  textarea::-ms-input-placeholder,
+  /* Legacy WebKit */
+  input::-webkit-input-placeholder,
+  textarea::-webkit-input-placeholder {
+    background: transparent !important; /* remove any shaded bg */
+    color: rgb(148 163 184); /* slate-400 */
+    opacity: 1; /* ensure visibility */
+  }
+}
+
+/* Botón con borde animado tipo haz de luz (robusto y sin máscaras) */
+/* removed animated border styles */
+/* Botón con borde animado (estilo ejemplo con ::before) */
