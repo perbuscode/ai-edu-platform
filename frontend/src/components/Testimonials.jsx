@@ -24,7 +24,7 @@ export default function Testimonials() {
   ];
 
   return (
-    <section className="py-8 md:py-10 bg-slate-900">
+    <section id="historias" className="py-8 md:py-10 bg-slate-900 scroll-mt-24 md:scroll-mt-28">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <h2 className="text-2xl md:text-3xl font-bold text-white">Historias reales de avance</h2>
         <div className="mt-6 grid gap-6 md:grid-cols-3">

@@ -40,18 +40,16 @@ export default function Navbar() {
         <div className="relative max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
           {/* Brand */}
           <a href="#inicio" className="flex items-center gap-3 text-white">
-            <span aria-hidden className="relative inline-flex items-center justify-center w-7 h-7 rounded-xl bg-gradient-to-tr from-sky-500 to-cyan-400 ring-2 ring-white/10 shadow-lg shadow-sky-500/20">
-              <span className="absolute -inset-0.5 rounded-xl bg-sky-400/20 blur-sm" />
-              <span className="relative block w-2 h-2 rounded-full bg-white/90" />
-            </span>
-            <span className="font-semibold tracking-tight text-[15px] sm:text-base">AI Edu Platform</span>
+            <img src="/images/logo-edvance.png" alt="Logo Edvance" className="h-20 md:h-30 w-auto" />
+            <span className="font-semibold tracking-tight text-[15px] sm:text-base">Educación de avanzada</span>
           </a>
 
           {/* Desktop links centrados */}
           <div className="hidden md:flex items-center gap-6 md:absolute md:left-1/2 md:-translate-x-1/2">
             <a href="#cursos" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Cursos</a>
+            <a href="#historias" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Historias</a>
             <a href="#plan" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Plan</a>
-            <a href="#contacto" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Contacto</a>
+            <a href="#blog" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Blog</a>
           </div>
 
           {/* Acciones derechas */}
@@ -59,7 +57,7 @@ export default function Navbar() {
             {/* Menú ¿Dudas? */}
             <div
               ref={faqRef}
-              className="relative"
+              className="relative hidden"
               onMouseEnter={() => { if (window.__dudasClose) clearTimeout(window.__dudasClose); setFaqOpen(true); }}
               onMouseLeave={() => { if (window.__dudasClose) clearTimeout(window.__dudasClose); window.__dudasClose = setTimeout(() => setFaqOpen(false), 200); }}
             >
@@ -130,6 +128,54 @@ export default function Navbar() {
                 ]}
               />
             )}
+
+            {/* Menú ¿Dudas? — después de Registrarse o del avatar */}
+            <div
+              ref={faqRef}
+              className="relative"
+              onMouseEnter={() => { if (window.__dudasClose) clearTimeout(window.__dudasClose); setFaqOpen(true); }}
+              onMouseLeave={() => { if (window.__dudasClose) clearTimeout(window.__dudasClose); window.__dudasClose = setTimeout(() => setFaqOpen(false), 200); }}
+            >
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 text-slate-200 hover:text-white text-sm"
+                aria-haspopup="menu"
+                aria-expanded={faqOpen || undefined}
+                aria-controls="menu-dudas"
+                onClick={() => setFaqOpen((v) => !v)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFaqOpen((v)=>!v);} if (e.key === 'Escape') setFaqOpen(false); }}
+              >
+                ¿Dudas?
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
+              <div
+                id="menu-dudas"
+                role="menu"
+                aria-hidden={!faqOpen || undefined}
+                className={`absolute right-0 mt-2 w-[320px] rounded-xl bg-white shadow-2xl border border-slate-200 p-2 text-slate-800 origin-top-right transform-gpu transition-all duration-200 ease-out ${faqOpen ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-y-1 scale-95 pointer-events-none'}`}
+              >
+                <button
+                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 flex items-center justify-between"
+                  onClick={() => setFaqFaqOpen((v)=>!v)}
+                  onKeyDown={(e)=>{ if (e.key==='Escape') setFaqOpen(false);} }
+                  aria-expanded={faqFaqOpen || undefined}
+                  aria-controls="submenu-faqs"
+                >
+                  <span className="font-medium">Preguntas frecuentes</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" className={faqFaqOpen?"rotate-180 transition-transform":"transition-transform"}><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                </button>
+                {faqFaqOpen && (
+                  <div id="submenu-faqs" className="px-2 py-1 text-sm text-slate-600 space-y-1">
+                    <div>¿El plan es genérico? — No, se adapta.</div>
+                    <div>¿El certificado sirve? — Portfolio + certificado.</div>
+                    <div>¿Y si me estanco? — Tutoría y ajustes.</div>
+                    <Link to="/faqs" className="text-sky-600 hover:underline inline-block mt-1">Ver más</Link>
+                  </div>
+                )}
+                <Link to="/pqr" className="block px-3 py-2 rounded-lg hover:bg-slate-50 text-sm text-slate-700">Peticiones, quejas o reclamos</Link>
+                <Link to="/contacto" className="block px-3 py-2 rounded-lg hover:bg-slate-50 text-sm text-slate-700">Contactar con un agente</Link>
+              </div>
+            </div>
           </div>
 
           {/* Mobile hamburger */}
@@ -149,8 +195,9 @@ export default function Navbar() {
           <div className="md:hidden border-t border-white/10 bg-slate-900/95 backdrop-blur">
             <div className="px-4 py-3 space-y-2">
               <a href="#cursos" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Cursos</a>
+              <a href="#historias" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Historias</a>
               <a href="#plan" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Plan</a>
-              <a href="#contacto" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Contacto</a>
+              <a href="#blog" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Blog</a>
               {/* ¿Dudas? en mobile */}
               <button
                 onClick={() => setFaqMobileOpen((v)=>!v)}

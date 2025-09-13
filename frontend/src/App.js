@@ -23,10 +23,14 @@ import PracticeInterview from "./pages/PracticeInterview";
 import Faqs from "./pages/Faqs";
 import Pqr from "./pages/Pqr";
 import Contacto from "./pages/Contacto";
+import BlogSection from "./components/BlogSection";
+import BlogPostModal from "./components/BlogPostModal";
 
 function Landing() {
   const [openExample, setOpenExample] = useState(false);
   const [currentPlan, setCurrentPlan] = useState(null);
+  const [openBlog, setOpenBlog] = useState(false);
+  const [currentPost, setCurrentPost] = useState(null);
 
   useEffect(() => {
     const onOpenExample = () => { setCurrentPlan(null); setOpenExample(true); };
@@ -47,9 +51,11 @@ function Landing() {
         <Courses />
         <Testimonials />
         <ChatPlanner />
+        <BlogSection onOpenPost={(post)=>{ setCurrentPost(post); setOpenBlog(true); }} />
       </main>
       <Footer onOpenExample={() => setOpenExample(true)} />
       <PlanExampleModal open={openExample} onClose={() => setOpenExample(false)} plan={currentPlan} />
+      <BlogPostModal open={openBlog} onClose={()=> setOpenBlog(false)} post={currentPost} />
     </>
   );
 }
@@ -71,6 +77,7 @@ export default function App() {
         <Route path="/faqs" element={<Faqs />} />
         <Route path="/pqr" element={<Pqr />} />
         <Route path="/contacto" element={<Contacto />} />
+        { /* Blog ahora es sección en landing; se elimina ruta dedicada */ }
         <Route
           path="/dashboard"
           element={

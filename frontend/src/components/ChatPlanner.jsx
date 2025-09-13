@@ -110,6 +110,21 @@ export default function ChatPlanner() {
     catch { el.scrollTop = el.scrollHeight; }
   }, [messages]);
 
+  // Sincroniza la altura del chat con la altura visible de la imagen
+  const imageBoxRef = useRef(null);
+  const [boxHeight, setBoxHeight] = useState(null);
+  useEffect(() => {
+    const updateBoxHeight = () => {
+      const box = imageBoxRef.current;
+      if (!box) return;
+      const h = box.offsetHeight;
+      if (h && h !== boxHeight) setBoxHeight(h);
+    };
+    updateBoxHeight();
+    window.addEventListener('resize', updateBoxHeight);
+    return () => window.removeEventListener('resize', updateBoxHeight);
+  }, [boxHeight]);
+
   // Placeholder en caso de no existir la imagen local
   const imgPlaceholder = encodeURI(`data:image/svg+xml;utf8,
     <svg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'>
@@ -141,20 +156,20 @@ export default function ChatPlanner() {
 
         <div className="mt-6 grid md:grid-cols-5 gap-6 items-stretch">
           {/* Ilustración a la izquierda */}
-          <div className="hidden md:block md:col-span-2 h-[400px] md:h-[440px]">
-            <div className="w-full h-full rounded-2xl shadow-xl overflow-hidden bg-slate-900">
+          <div className="hidden md:block md:col-span-2 h-[380px] md:h-[420px]" ref={imageBoxRef}>
+            <div className="w-full h-full rounded-2xl overflow-hidden">
               <img
                 src="/images/study-plan.png"
                 alt="Ilustración plan de estudio"
-                className="w-full h-full object-cover object-top"
-                style={{ clipPath: 'inset(0% 0% 7% 0% round 16px)' }}
+                className="w-full h-full object-contain object-center"
+                onLoad={() => { try { const box = imageBoxRef.current; if (box) setBoxHeight(box.offsetHeight); } catch {} }}
                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = imgPlaceholder; }}
               />
             </div>
           </div>
 
           {/* Chat a la derecha */}
-          <div className="md:col-span-3 bg-white rounded-2xl p-5 shadow-2xl border border-slate-200 relative h-[400px] md:h-[440px] flex flex-col">
+          <div className="md:col-span-3 bg-white rounded-2xl p-5 shadow-2xl border border-slate-200 relative h-[380px] md:h-[420px] flex flex-col overflow-hidden" style={{ height: boxHeight ? `${boxHeight}px` : undefined, clipPath: 'inset(0% 0% 12% 0% round 16px)' }}>
             <div ref={listRef} className="space-y-3 flex-1 overflow-auto pr-1">
               {messages.map((m, i) => (
                 <div key={i} className={m.role === "assistant" ? "flex items-start gap-3" : "flex items-start gap-3 justify-end"}>
@@ -207,6 +222,7 @@ export default function ChatPlanner() {
 function PlannerHelpTip() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const hideTimerRef = useRef(null);
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
@@ -219,8 +235,12 @@ function PlannerHelpTip() {
     <div
       ref={ref}
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => { if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); hideTimerRef.current = null; } setOpen(true); }}
+      onMouseLeave={() => {
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+        // Deja el menú visible unos segundos extra antes de ocultarlo
+        hideTimerRef.current = setTimeout(() => { setOpen(false); hideTimerRef.current = null; }, 1500);
+      }}
     >
       <button
         type="button"
@@ -241,7 +261,7 @@ function PlannerHelpTip() {
         aria-hidden={!open || undefined}
         className={`absolute left-full ml-2 top-0 w-64 sm:w-72 max-w-[80vw] rounded-xl bg-white shadow-2xl border border-slate-200 p-3 text-sm text-slate-700 z-10 origin-top-left transform-gpu transition-all duration-200 ease-out ${open ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'}`}
       >
-        <p className="font-semibold text-slate-900">Pasos rápidos</p>
+        <p className="font-semibold text-slate-900">Pasos rápidos y ejemplos</p>
         <ol className="mt-1 list-decimal pl-5 space-y-1">
           <li>Escribe tu objetivo (curso/rol).</li>
           <li>Responde: experiencia, horas/semana y semanas meta.</li>

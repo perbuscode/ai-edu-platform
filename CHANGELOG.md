@@ -1,5 +1,27 @@
 # Changelog
 
+## 2025-09-13 — Landing polish, Blog como sección, accesibilidad y branding
+
+- Footer
+  - Redes sociales reordenadas arriba y copyright abajo.
+  - Uso de `&copy; 2025 AI EdTech. Todos los derechos reservados.` para compatibilidad.
+- FAQ
+  - `frontend/src/components/FAQ.jsx`: refactor a `details/summary` accesibles con transición suave; corrección de tildes y signos (español).
+  - `frontend/src/pages/Faqs.jsx`: acordeón accesible con animación (altura/opacidad), flecha rotatoria y textos normalizados en español.
+- Chat Planner (Genera tu plan)
+  - La ilustración no se recorta (object-contain) y se integra al fondo sin bordes extra.
+  - Recorte aplicado solo al contenedor del chat (clipPath inferior) para acabado limpio.
+  - Altura del chat sincronizada dinámicamente con la altura visible de la imagen mediante `ref` y `resize`.
+  - Ajustes de espaciado con secciones adyacentes (footer y blog) para ritmo visual consistente.
+- Blog como sección del landing
+  - Nuevo `frontend/src/components/BlogSection.jsx` y añadido bajo `ChatPlanner` en `App.js`.
+  - Ruta `/blog` retirada del router; navegación desde navbar apunta a `#blog`.
+- Navbar
+  - Nuevo enlace “Historias” tras “Cursos” (desktop y móvil) y ancla `id="historias"` en `Testimonials`.
+  - Reubicación del botón “¿Dudas?”: ahora aparece tras “Registrarse” o después del avatar si hay sesión.
+  - Reemplazo del avatar del proyecto por el logo `public/images/logo-edvance.png` y aumento de tamaño (h-9/md:h-10).
+  - Texto de marca actualizado a “Educación de avanzada”.
+
 ## v0.3.0 — MVP Plan + Progreso + Certificado (Unreleased)
 
 - Backend: `POST /plan` con OpenAI (modo simulado si falta `OPENAI_API_KEY`).
