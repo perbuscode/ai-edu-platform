@@ -12,15 +12,15 @@ export default function Pqr() {
         <form onSubmit={submit} className="mt-6 bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700">Nombre</label>
-            <input value={form.nombre} onChange={(e)=>update('nombre', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" required />
+            <input value={form.nombre} onChange={(e)=>update('nombre', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus:border-sky-300" placeholder="Tu nombre completo" required />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700">Email</label>
-            <input type="email" value={form.email} onChange={(e)=>update('email', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" required />
+            <input type="email" value={form.email} onChange={(e)=>update('email', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus:border-sky-300" placeholder="tucorreo@dominio.com" required />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700">Tipo</label>
-            <select value={form.tipo} onChange={(e)=>update('tipo', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+            <select value={form.tipo} onChange={(e)=>update('tipo', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 bg-white text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus:border-sky-300">
               <option value="peticion">Petición</option>
               <option value="queja">Queja</option>
               <option value="reclamo">Reclamo</option>
@@ -28,12 +28,11 @@ export default function Pqr() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700">Mensaje</label>
-            <textarea value={form.mensaje} onChange={(e)=>update('mensaje', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 h-28" required />
+            <textarea value={form.mensaje} onChange={(e)=>update('mensaje', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 h-28 bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus:border-sky-300" placeholder="Describe tu peticion, queja o reclamo" required />
           </div>
-          <button className="px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800">Enviar</button>
+          <button className="px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30">Enviar</button>
         </form>
       </div>
     </main>
   );
 }
-

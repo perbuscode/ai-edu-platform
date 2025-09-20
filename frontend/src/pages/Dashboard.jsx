@@ -11,7 +11,6 @@ import NextClasses from "../sections/NextClasses";
 import SkillsMap from "../sections/SkillsMap";
 import Employability from "../sections/Employability";
 import SkillsWallet from "../sections/SkillsWallet";
-import FloatingAssistant from "../components/FloatingAssistant";
 // import Certifications from "../sections/Certifications";
 
 export default function Dashboard() {
@@ -80,7 +79,6 @@ export default function Dashboard() {
       <SkillsMap observe={observe} />
       <Employability observe={observe} />
       {false && <SkillsWallet observe={observe} />}
-      <FloatingAssistant />
     </DashboardLayout>
   );
 }

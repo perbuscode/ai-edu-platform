@@ -22,7 +22,7 @@ export default function VirtualRoom() {
           </div>
           <div className="hidden sm:flex items-center gap-2">
             <span className="text-xs text-slate-500">Sala:</span>
-            <span className="px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs font-mono">AIEdu-1234</span>
+            <span className="px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs font-mono">Edvance-1234</span>
           </div>
         </div>
 
@@ -75,4 +75,3 @@ function RoomButton({ icon, label, danger }) {
     </button>
   );
 }
-

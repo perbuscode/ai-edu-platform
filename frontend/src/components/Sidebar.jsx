@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LuChevronFirst, LuChevronLast, LuHouse, LuBookOpen, LuMap, LuBriefcase, LuBot, LuSparkles, LuLayoutDashboard } from "react-icons/lu";
+import { LuChevronFirst, LuChevronLast, LuHouse, LuBookOpen, LuMap, LuBriefcase, LuBot, LuSparkles, LuLayoutDashboard, LuAward } from "react-icons/lu";
 
 // Sidebar fijo estilo maqueta (w-64). Usa clase 'nav-active' para el enlace activo.
 export default function Sidebar({ links = [], activeId, onLinkClick, collapsed = false, onToggle }) {
@@ -23,10 +23,10 @@ export default function Sidebar({ links = [], activeId, onLinkClick, collapsed =
   const HIDDEN_KEYS = new Set(["tutor", "copilot"]);
 
   return (
-    <aside className={`fixed inset-y-0 left-0 ${collapsed ? 'w-16' : 'w-64'} bg-slate-900/80 border-r border-white/10 backdrop-blur z-40 transition-[width] duration-300 ease-in-out overflow-hidden`}>
-      <div className={`h-16 border-b border-white/10 ${collapsed ? 'grid place-items-center px-0' : 'flex items-center justify-between px-3'}`}>
+    <aside className={`fixed inset-y-0 left-0 ${collapsed ? 'w-10' : 'w-56'} bg-slate-900/80 border-r border-white/10 backdrop-blur z-40 transition-[width] duration-300 ease-in-out overflow-hidden flex flex-col`}>
+      <div className={`h-16 border-b border-white/10 ${collapsed ? 'grid place-items-center px-0' : 'relative flex items-center justify-end px-3'}`}>
         {!collapsed && (
-          <span className="text-sm font-semibold">AI Edu Platform</span>
+          <img src="/images/logo-edvance.png" alt="Edvance" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none h-20 md:h-30 w-auto" />
         )}
         <button
           type="button"
@@ -90,12 +90,12 @@ export default function Sidebar({ links = [], activeId, onLinkClick, collapsed =
               "Fundamentos de Scrum (2024)",
             ].map((txt, i) => (
               <li key={i} className="flex items-start gap-2 text-[13px] text-slate-300/90">
-                <span className="mt-0.5 inline-flex w-4 h-4 rounded bg-emerald-500/20 text-emerald-300 items-center justify-center" aria-hidden>
+                <span className="mt-0.5 inline-flex w-5 h-5 shrink-0 rounded bg-emerald-500/20 text-emerald-300 items-center justify-center" aria-hidden>
                   <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
                   </svg>
                 </span>
-                <span className="flex-1 leading-5">{txt}</span>
+                <span className="flex-1 leading-5 whitespace-nowrap">{txt}</span>
               </li>
             ))}
           </ul>
@@ -110,7 +110,22 @@ export default function Sidebar({ links = [], activeId, onLinkClick, collapsed =
           </div>
         </div>
       )}
-      
+      {showCerts && collapsed && (
+        <div className="mt-auto px-2 pb-4">
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/certificaciones')}
+            className="w-full flex justify-center"
+            aria-label="Ver certificaciones"
+            title="Ver certificaciones"
+          >
+            <span className="w-8 h-8 grid place-items-center rounded-full bg-sky-500/25 text-sky-200 shadow-lg">
+              <LuAward size={18} aria-hidden />
+            </span>
+          </button>
+        </div>
+      )}
+
     </aside>
   );
 }

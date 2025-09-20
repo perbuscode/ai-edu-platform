@@ -39,17 +39,17 @@ export default function Navbar() {
       <nav className="fixed top-0 inset-x-0 z-[80] bg-slate-900/80 backdrop-blur-md border-b border-white/10">
         <div className="relative max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
           {/* Brand */}
-          <a href="#inicio" className="flex items-center gap-3 text-white">
+          <Link to="/#inicio" className="flex items-center gap-3 text-white">
             <img src="/images/logo-edvance.png" alt="Logo Edvance" className="h-20 md:h-30 w-auto" />
             <span className="font-semibold tracking-tight text-[15px] sm:text-base">Educación de avanzada</span>
-          </a>
+          </Link>
 
           {/* Desktop links centrados */}
           <div className="hidden md:flex items-center gap-6 md:absolute md:left-1/2 md:-translate-x-1/2">
-            <a href="#cursos" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Cursos</a>
-            <a href="#historias" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Historias</a>
-            <a href="#plan" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Plan</a>
-            <a href="#blog" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Blog</a>
+            <Link to="/#cursos" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Cursos</Link>
+            <Link to="/#historias" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Historias</Link>
+            <Link to="/#plan" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Plan</Link>
+            <Link to="/#blog" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Blog</Link>
           </div>
 
           {/* Acciones derechas */}
@@ -63,15 +63,17 @@ export default function Navbar() {
             >
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 text-slate-200 hover:text-white text-sm"
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-white/10 text-slate-200 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 text-[0]"
+                aria-label="Dudas"
                 aria-haspopup="menu"
                 aria-expanded={faqOpen || undefined}
                 aria-controls="menu-dudas"
                 onClick={() => setFaqOpen((v) => !v)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFaqOpen((v)=>!v);} if (e.key === 'Escape') setFaqOpen(false); }}
               >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.09 9a3 3 0 115.82 1c0 2-3 2-3 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
                 ¿Dudas?
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.09 9a3 3 0 115.82 1c0 2-3 2-3 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
               </button>
               <div
                 id="menu-dudas"
@@ -138,7 +140,8 @@ export default function Navbar() {
             >
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 text-slate-200 hover:text-white text-sm"
+                aria-label="Dudas"
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-white/10 text-slate-200 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 text-[0]"
                 aria-haspopup="menu"
                 aria-expanded={faqOpen || undefined}
                 aria-controls="menu-dudas"
@@ -146,7 +149,7 @@ export default function Navbar() {
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFaqOpen((v)=>!v);} if (e.key === 'Escape') setFaqOpen(false); }}
               >
                 ¿Dudas?
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.09 9a3 3 0 115.82 1c0 2-3 2-3 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
               </button>
               <div
                 id="menu-dudas"
@@ -194,10 +197,10 @@ export default function Navbar() {
         {mobileOpen && (
           <div className="md:hidden border-t border-white/10 bg-slate-900/95 backdrop-blur">
             <div className="px-4 py-3 space-y-2">
-              <a href="#cursos" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Cursos</a>
-              <a href="#historias" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Historias</a>
-              <a href="#plan" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Plan</a>
-              <a href="#blog" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Blog</a>
+              <Link to="/#cursos" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Cursos</Link>
+              <Link to="/#historias" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Historias</Link>
+              <Link to="/#plan" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Plan</Link>
+              <Link to="/#blog" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Blog</Link>
               {/* ¿Dudas? en mobile */}
               <button
                 onClick={() => setFaqMobileOpen((v)=>!v)}

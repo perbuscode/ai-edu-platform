@@ -160,7 +160,7 @@ export default function StudyPlan() {
       doc.setFont('helvetica','normal');
       doc.setFontSize(14);
       doc.setTextColor(51,65,85);
-      doc.text('AI Edu Platform certifica que', w/2, 160, { align: 'center' });
+      doc.text('Edvance certifica que', w/2, 160, { align: 'center' });
 
       // Nombre
       const name = user?.displayName || 'Estudiante';
@@ -185,7 +185,7 @@ export default function StudyPlan() {
       doc.circle(w - 170, h - 120, 50, 'F');
       doc.setTextColor(255,255,255);
       doc.setFontSize(16);
-      doc.text('AI EDU', w - 170, h - 124, { align: 'center' });
+      doc.text('EDVANCE', w - 170, h - 124, { align: 'center' });
       doc.setFontSize(12);
       doc.text('CERTIFICADO', w - 170, h - 104, { align: 'center' });
 

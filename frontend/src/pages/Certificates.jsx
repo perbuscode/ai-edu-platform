@@ -11,7 +11,7 @@ export default function Certificates() {
   return (
     <DashboardLayout links={links} activeId={activeId} onLinkClick={() => {}}>
       <Certifications />
-      <FloatingAssistant />
+      <FloatingAssistant placement="top-right" strategy="absolute" offsetClass="top-20" />
     </DashboardLayout>
   );
 }

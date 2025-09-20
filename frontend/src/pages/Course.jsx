@@ -28,11 +28,10 @@ export default function Course() {
     <div className="bg-slate-900 text-slate-100 min-h-screen">
       {/* Course local sidebar with tabs (collapsible) */}
       <aside className={`fixed inset-y-0 left-0 ${collapsed ? 'w-16' : 'w-64'} bg-slate-900/80 border-r border-white/10 backdrop-blur z-40 transition-[width] duration-200`}> 
-        <div className="h-16 flex items-center justify-between px-3 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 gradient-bg rounded-md grid place-items-center"><span className="text-white text-sm font-bold">AE</span></div>
-            <span className={`${collapsed ? 'hidden' : 'text-sm font-semibold'}`}>AI Edu Platform</span>
-          </div>
+        <div className="h-16 relative flex items-center justify-end px-3 border-b border-white/10">
+          {!collapsed && (
+            <img src="/images/logo-edvance.png" alt="Edvance" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none h-20 md:h-30 w-auto" />
+          )}
           <button
             className="p-1.5 rounded-md border border-white/10 text-slate-200 hover:bg-white/10"
             aria-label={collapsed ? 'Expandir navegación' : 'Colapsar navegación'}

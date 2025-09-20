@@ -2,9 +2,9 @@
 import React, { useEffect, useMemo, useRef } from "react";
 
 const defaultCerts = [
-  { id: "cert-react", title: "Certificado: React Avanzado", issuer: "AI Edu", date: "2025-05-12" },
-  { id: "cert-powerbi", title: "Certificado: Power BI Profesional", issuer: "AI Edu", date: "2025-03-28" },
-  { id: "cert-scrum", title: "Certificado: Fundamentos de Scrum", issuer: "AI Edu", date: "2024-11-02" },
+  { id: "cert-react", title: "Certificado: React Avanzado", issuer: "Edvance", date: "2025-05-12" },
+  { id: "cert-powerbi", title: "Certificado: Power BI Profesional", issuer: "Edvance", date: "2025-03-28" },
+  { id: "cert-scrum", title: "Certificado: Fundamentos de Scrum", issuer: "Edvance", date: "2024-11-02" },
 ];
 
 export default function Certifications({ observe, items }) {
@@ -41,7 +41,7 @@ export default function Certifications({ observe, items }) {
     // Subtitle
     ctx.fillStyle = '#334155';
     ctx.font = '24px Arial, sans-serif';
-    ctx.fillText('AI Edu Platform certifica que', width / 2, 220);
+    ctx.fillText('Edvance certifica que', width / 2, 220);
 
     // Name placeholder
     ctx.fillStyle = '#111827';
@@ -70,7 +70,7 @@ export default function Certifications({ observe, items }) {
     ctx.fill();
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 22px Arial, sans-serif';
-    ctx.fillText('AI EDU', cx, cy - 4);
+    ctx.fillText('EDVANCE', cx, cy - 4);
     ctx.font = '16px Arial, sans-serif';
     ctx.fillText('CERTIFIED', cx, cy + 24);
 

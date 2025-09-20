@@ -1,6 +1,7 @@
 // src/sections/Intro.jsx
 import React, { useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import FloatingAssistant from "../components/FloatingAssistant";
 
 export default function Intro({ observe }) {
   const { user } = useAuth();
@@ -17,7 +18,7 @@ export default function Intro({ observe }) {
   const ref = useRef(null);
   useEffect(() => (observe ? observe(ref.current) : undefined), [observe]);
   return (
-    <section id="intro" ref={ref} className="scroll-mt-20 bg-white/5 border border-white/10 rounded-xl p-6">
+    <section id="intro" ref={ref} className="relative scroll-mt-20 bg-white/5 border border-white/10 rounded-xl p-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl md:text-2xl font-bold">Hola, {displayName} 👋</h2>
@@ -25,6 +26,9 @@ export default function Intro({ observe }) {
         </div>
         {/* Botón de navegación eliminado por redundante */}
       </div>
+
+      {/* Asistente alineado a la parte superior del saludo, un poco a la izquierda */}
+      <FloatingAssistant placement="top-right" strategy="absolute" offsetClass="top-6 right-6" />
     </section>
   );
 }

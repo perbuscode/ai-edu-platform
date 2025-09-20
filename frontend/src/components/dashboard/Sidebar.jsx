@@ -30,7 +30,7 @@ export default function Sidebar({ brand = { title: "EduLearn", subtitle: "Dashbo
   return (
     <>
       {mobile && isExpanded && (<div className="fixed inset-0 z-30 bg-black/40" onClick={onClose} />)}
-      <aside className={`fixed top-0 left-0 h-screen ${isCollapsed ? "w-12" : "w-64"} bg-white shadow-lg z-40 border-r border-gray-200 overflow-y-auto dark:bg-slate-900 dark:border-slate-800 transition-[width] duration-200`} aria-label="Navegación del curso">
+      <aside className={`fixed top-0 left-0 h-screen ${isCollapsed ? "w-8" : "w-40"} bg-white shadow-lg z-40 border-r border-gray-200 overflow-y-auto dark:bg-slate-900 dark:border-slate-800 transition-[width] duration-200`} aria-label="Navegación del curso">
         <div className="p-3 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between">
           {isCollapsed ? (
             <button onClick={onExpand} className="p-1.5 rounded-md border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800" aria-label="Mostrar navegación">
@@ -93,4 +93,3 @@ export default function Sidebar({ brand = { title: "EduLearn", subtitle: "Dashbo
     </>
   );
 }
-

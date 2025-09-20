@@ -50,7 +50,7 @@ export default function PortfolioProjects() {
           ))}
         </div>
       </section>
-      <FloatingAssistant />
+      <FloatingAssistant placement="top-right" strategy="absolute" offsetClass="top-20" />
     </DashboardLayout>
   );
 }

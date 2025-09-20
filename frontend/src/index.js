@@ -13,16 +13,22 @@ initTheme();
 
 // Interceptor global para enlaces con hash: scroll suave a secciones
 document.addEventListener('click', (e) => {
-  const anchor = e.target && e.target.closest && e.target.closest('a[href^="#"]');
+  const anchor = e.target && e.target.closest && e.target.closest('a[href^="#"], a[href^="/#"]');
   if (!anchor) return;
-  const href = anchor.getAttribute('href');
-  if (!href || href === '#' || href.length < 2) return;
-  const id = href.slice(1);
-  const el = document.getElementById(id);
-  if (!el) return;
-  e.preventDefault();
-  try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  catch { window.location.hash = href; }
+  const href = anchor.getAttribute('href') || '';
+  // Caso 1: enlaces internos del mismo documento (#id): prevenimos y hacemos scroll
+  if (href.startsWith('#')) {
+    if (href === '#' || href.length < 2) return;
+    const id = href.slice(1);
+    const el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    catch { window.location.hash = href; }
+    return;
+  }
+  // Caso 2: enlaces a "/#id" (navegan a la landing): dejamos que React Router maneje
+  // y App.js aplicará el scroll al detectar el hash tras el cambio de ruta.
 });
 
 // Logs de diagnóstico para detectar instalaciones duplicadas de React

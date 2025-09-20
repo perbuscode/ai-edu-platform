@@ -25,6 +25,7 @@ import Pqr from "./pages/Pqr";
 import Contacto from "./pages/Contacto";
 import BlogSection from "./components/BlogSection";
 import BlogPostModal from "./components/BlogPostModal";
+import AssistantSidebar from "./components/AssistantSidebar";
 
 function Landing() {
   const [openExample, setOpenExample] = useState(false);
@@ -62,6 +63,22 @@ function Landing() {
 
 export default function App() {
   const location = useLocation();
+  // Scroll a secciones del landing cuando la URL trae hash (ej: "/#plan")
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.slice(1);
+    const scroll = () => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      catch { el.scrollIntoView(); }
+    };
+    // Ejecuta varias veces para cubrir montaje de Landing
+    const t0 = setTimeout(scroll, 0);
+    const t1 = setTimeout(scroll, 120);
+    const t2 = setTimeout(scroll, 300);
+    return () => { clearTimeout(t0); clearTimeout(t1); clearTimeout(t2); };
+  }, [location.pathname, location.hash]);
   const hideNavbar = (
     location.pathname.startsWith("/dashboard") ||
     location.pathname.startsWith("/profile") ||
@@ -69,6 +86,8 @@ export default function App() {
     location.pathname.startsWith("/cv") ||
     location.pathname.startsWith("/practice")
   );
+  const showAssistantSidebar = location.pathname.startsWith("/dashboard");
+
   return (
     <div className="bg-slate-900 min-h-screen">
       {!hideNavbar && <Navbar />}
@@ -143,6 +162,8 @@ export default function App() {
           }
         />
       </Routes>
+      {/* Asesor IA visible solo en dashboard */}
+      {showAssistantSidebar && <AssistantSidebar />}
     </div>
   );
 }

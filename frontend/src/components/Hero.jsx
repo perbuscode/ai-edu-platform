@@ -5,7 +5,7 @@ export default function Hero({ onOpenExample }) {
   return (
     <section
       id="inicio"
-      className="pt-12 md:pt-16 bg-slate-900"
+      className="pt-16 md:pt-20 bg-slate-900 scroll-mt-16 md:scroll-mt-20"
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10 grid md:grid-cols-2 gap-10 items-center">
         {/* Texto principal */}
@@ -23,9 +23,9 @@ export default function Hero({ onOpenExample }) {
             <a
               href="#plan"
               onClick={(e) => { e.preventDefault(); const el = document.getElementById('plan'); if (el && el.scrollIntoView) { try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch { window.location.hash = '#plan'; } } else { window.location.hash = '#plan'; } }}
-              className="group relative inline-block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+              className="inline-block rounded-xl"
             >
-              <span className="relative inline-block px-6 py-3 rounded-[inherit] bg-sky-600 text-white font-semibold shadow-md transition-colors duration-200 hover:bg-sky-500">
+              <span className="relative inline-flex items-center justify-center px-6 py-3 rounded-[inherit] border border-transparent bg-sky-600 text-white font-semibold shadow-md transition-colors duration-200 hover:bg-sky-500">
                 Generar mi plan ahora
               </span>
             </a>
