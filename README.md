@@ -1,4 +1,4 @@
-# AI Edu Platform
+# Edvance
 
 Plataforma educativa basada en IA que permite a los usuarios solicitar cursos personalizados, con clases generadas automáticamente, tutor virtual, evaluación y certificación final.
 
@@ -50,4 +50,3 @@ Plataforma educativa basada en IA que permite a los usuarios solicitar cursos pe
 
 ## Autor
 GitHub: [perbuscode](https://github.com/perbuscode)
-
