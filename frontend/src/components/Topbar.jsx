@@ -1,12 +1,24 @@
 // src/components/Topbar.jsx
-import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import UserMenu from "./UserMenu";
 
-export default function Topbar({ leftOffsetClass = 'left-64', showLogo = false }) {
+export default function Topbar({ leftOffsetClass = 'left-64', showLogo = false, title }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const computedTitle = useMemo(() => {
+    if (title) return title;
+    const rawPath = location.pathname || '';
+    const pathname = rawPath.length > 1 && rawPath.endsWith('/') ? rawPath.slice(0, -1) : rawPath;
+    if (pathname === '/dashboard') return 'Dashboard del estudiante';
+    if (pathname.startsWith('/dashboard/salon-virtual')) return 'Salón de clases';
+    if (pathname.startsWith('/dashboard/certificaciones')) return 'Certificaciones';
+    if (pathname.startsWith('/dashboard/portafolio')) return 'Portafolio';
+    if (pathname.startsWith('/dashboard')) return 'Panel del estudiante';
+    return 'Tutor IA';
+  }, [location.pathname, title]);
 
   const [faqOpen, setFaqOpen] = useState(false);
   const [faqFaqOpen, setFaqFaqOpen] = useState(true);
@@ -27,8 +39,17 @@ export default function Topbar({ leftOffsetClass = 'left-64', showLogo = false }
     <header className={`fixed ${leftOffsetClass} right-0 top-0 h-16 bg-slate-900/60 border-b border-white/10 backdrop-blur z-30 flex items-center transition-[left] duration-300 ease-in-out`}>
       <div className="max-w-7xl mx-auto w-full px-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {showLogo && (<img src="/images/logo-edvance.png" alt="Edvance" className="h-20 md:h-30 w-auto" />)}
-          <h1 className="text-base md:text-lg font-semibold">Dashboard del estudiante</h1>
+          {showLogo && (
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 rounded-md"
+              aria-label="Ir al landing de Edvance"
+            >
+              <img src="/images/logo-edvance.png" alt="Edvance" className="h-20 md:h-30 w-auto" />
+            </button>
+          )}
+          <h1 className="text-base md:text-lg font-semibold">{computedTitle}</h1>
         </div>
         <div className="flex items-center gap-3">
           {user && (
@@ -93,3 +114,4 @@ export default function Topbar({ leftOffsetClass = 'left-64', showLogo = false }
     </header>
   );
 }
+

@@ -27,4 +27,3 @@ export const mockCourse = {
 };
 
 export default mockCourse;
-

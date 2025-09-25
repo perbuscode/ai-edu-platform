@@ -2,7 +2,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "./Toast";
-import { LuSparkles, LuX } from "react-icons/lu";
+import { LuSparkles, LuX, LuMessageCircle } from "react-icons/lu";
+import LessonNotes from "./LessonNotes";
 
 const COLLAPSED_WIDTH = 56;
 const DEFAULT_ASSISTANT_WIDTH = 180;
@@ -37,7 +38,18 @@ export default function AssistantSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
-  const topOffset = (location.pathname || "").startsWith("/dashboard") ? 56 : 0;
+  const anchoredPaths = [/^\/dashboard/, /^\/course/, /^\/cv/, /^\/practice-interview/, /^\/missions/];
+  const topOffset = anchoredPaths.some((regex) => regex.test(location.pathname || "")) ? 56 : 0;
+
+  const LESSON_NOTES_FALLBACK = "lesson-1";
+  const getLessonIdFromStorage = () => {
+    if (typeof window === "undefined") return LESSON_NOTES_FALLBACK;
+    try {
+      const stored = localStorage.getItem("ai-edu:last-lesson-id");
+      if (stored) return stored;
+    } catch {}
+    return LESSON_NOTES_FALLBACK;
+  };
 
   const [expanded, setExpanded] = useState(() => getStoredBoolean("assistant:sidebar:expanded", true));
   const [width, setWidth] = useState(() => getStoredWidth("assistant:sidebar:width", DEFAULT_ASSISTANT_WIDTH));
@@ -49,8 +61,12 @@ export default function AssistantSidebar() {
   const [chatInput, setChatInput] = useState("");
   const [moreOpen, setMoreOpen] = useState(false);
 
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesLessonId, setNotesLessonId] = useState(() => getLessonIdFromStorage());
+
   const feedRef = useRef(null);
   const chatRef = useRef(null);
+  const chatInputRef = useRef(null);
   const resizeStateRef = useRef(null);
   const wasDraggingRef = useRef(false);
   const moreButtonRef = useRef(null);
@@ -191,24 +207,49 @@ export default function AssistantSidebar() {
     ensureExpanded();
   }, [ensureExpanded, normalizeSuggestion]);
 
+  const appendAssistantMessage = useCallback((text) => {
+    if (!text) return;
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        id: `assistant-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        author: "assistant",
+        text,
+      },
+    ]);
+    ensureExpanded();
+  }, [ensureExpanded]);
+
   const openQuiz = useCallback((payload) => {
-    pushSuggestion({
-      tag: "Quiz",
-      title: payload?.title || "Quiz de práctica (5 preguntas)",
-      desc: payload?.desc || "Enfocado en lo visto hoy.",
-    });
+    appendAssistantMessage(
+      payload?.message || "Listo, preparo un quiz de 5 preguntas para repasar lo que vimos. Abramos el Salón Virtual para comenzar."
+    );
     navigate("/dashboard/salon-virtual");
     try { toast.info("Abriendo Quiz en Salón Virtual", 2500); } catch {}
-  }, [navigate, pushSuggestion, toast]);
+  }, [appendAssistantMessage, navigate, toast]);
 
   const openExplanation = useCallback((payload) => {
-    pushSuggestion({
-      tag: payload?.topic || "Explicación",
-      title: payload?.title || "Explicación solicitada",
-      desc: payload?.desc || "Te compartiré una explicación paso a paso.",
-    });
+    appendAssistantMessage(
+      payload?.message || "Estoy preparando una explicación paso a paso para reforzar los conceptos clave. Veamos el contenido juntos."
+    );
     navigate("/dashboard/salon-virtual");
-  }, [navigate, pushSuggestion]);
+  }, [appendAssistantMessage, navigate]);
+
+  const openVirtualRoom = useCallback(() => {
+    appendAssistantMessage("Abramos el Salón Virtual para seguir trabajando contigo.");
+    navigate("/dashboard/salon-virtual");
+    try { toast.info("Abriendo Salón Virtual", 2500); } catch {}
+  }, [appendAssistantMessage, navigate, toast]);
+
+  const openLessonNotes = useCallback((payload) => {
+    const lessonId = payload?.lessonId || getLessonIdFromStorage();
+    setNotesLessonId(lessonId);
+    setNotesOpen(true);
+    appendAssistantMessage(
+      payload?.message || "Abrí tus notas locales para que captures dudas y aprendizajes cuando quieras."
+    );
+    ensureExpanded();
+  }, [appendAssistantMessage, ensureExpanded]);
 
   const openPlan = useCallback((payload) => {
     try {
@@ -230,8 +271,9 @@ export default function AssistantSidebar() {
   const primaryActions = useMemo(() => ([
     { key: "quiz5", label: "Quiz 5", emoji: "❓", title: "Quiz de práctica (5)", onClick: () => openQuiz() },
     { key: "explicacion", label: "Explicación", emoji: "💡", title: "Explicar contenido", onClick: () => openExplanation() },
-    { key: "salon", label: "Salón Virtual", emoji: "🎥", title: "Abrir Salón Virtual", onClick: () => navigate("/dashboard/salon-virtual") },
-  ]), [navigate, openExplanation, openQuiz]);
+    { key: "notas", label: "Notas", emoji: "📝", title: "Abrir notas de la lección", onClick: () => openLessonNotes() },
+    { key: "salon", label: "Salón Virtual", emoji: "🎥", title: "Abrir Salón Virtual", onClick: () => openVirtualRoom() },
+  ]), [openExplanation, openLessonNotes, openQuiz, openVirtualRoom]);
 
   const extraActions = useMemo(() => ([
     {
@@ -310,6 +352,13 @@ export default function AssistantSidebar() {
     action.onSelect?.();
   }, [ensureExpanded]);
 
+  const handleChatShortcut = useCallback(() => {
+    ensureExpanded();
+    setTimeout(() => {
+      try { chatInputRef.current?.focus(); } catch {}
+    }, 160);
+  }, [ensureExpanded]);
+
   useEffect(() => {
     if (!moreOpen) return;
 
@@ -338,9 +387,22 @@ export default function AssistantSidebar() {
 
   useEffect(() => {
     if (!expanded) {
-      setMoreOpen(false);
+      setNotesOpen(false);
     }
   }, [expanded]);
+
+  useEffect(() => {
+    if (!notesOpen) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setNotesOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [notesOpen]);
 
   const handleChatSubmit = useCallback((event) => {
     event.preventDefault();
@@ -376,20 +438,22 @@ export default function AssistantSidebar() {
       openPlan: (p) => openPlan(p),
       openExplanation: (p) => openExplanation(p),
       openProjectReview: (p) => openProjectReview(p),
+      openVirtualRoom: () => openVirtualRoom(),
+      openLessonNotes: (p) => openLessonNotes(p),
       open: () => ensureExpanded(),
       close: () => setExpanded(false),
       toggle: () => toggleExpanded(),
     };
     try { window.Assistant = Object.assign(window.Assistant || {}, api); } catch { window.Assistant = api; }
     return () => {};
-  }, [ensureExpanded, openExplanation, openPlan, openProjectReview, openQuiz, pushSuggestion, toast, toggleExpanded]);
+  }, [ensureExpanded, openExplanation, openLessonNotes, openPlan, openProjectReview, openQuiz, openVirtualRoom, pushSuggestion, toast, toggleExpanded]);
 
   const sidebarWidth = expanded ? width : COLLAPSED_WIDTH;
   const unreadCount = feed.length;
   const compactBadgeContent = unreadCount > 99 ? "99+" : String(unreadCount);
   const showCompactBadge = !expanded && unreadCount > 0;
   const showExpandedDot = expanded && unreadCount > 0;
-  const moreMenuPlacement = expanded ? "right-0 top-full mt-2 origin-top-right" : "left-full top-1/2 -translate-y-1/2 ml-2 origin-left";
+  const moreMenuPlacement = expanded ? "right-0 top-full mt-2 origin-top-right" : "right-full top-1/2 -translate-y-1/2 -mr-3 origin-right";
 
   const hasFeed = expanded && feed.length > 0;
 
@@ -397,7 +461,7 @@ export default function AssistantSidebar() {
     <aside
       id="assistant-sidebar"
       className={`fixed right-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-l border-slate-200/70 dark:border-slate-700/60 shadow-xl transition-[width,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]`}
-      aria-label="Asesor IA"
+      aria-label="Tutor IA"
       aria-expanded={expanded}
       style={{ width: sidebarWidth, minWidth: COLLAPSED_WIDTH, maxWidth: MAX_ASSISTANT_WIDTH, top: topOffset, bottom: 0 }}
     >
@@ -424,7 +488,7 @@ export default function AssistantSidebar() {
             </span>
             {expanded && (
               <span className="select-none text-left">
-                <span className="block text-sm font-semibold text-slate-900 dark:text-white">Asesor IA</span>
+                <span className="block text-sm font-semibold text-slate-900 dark:text-white">Tutor IA</span>
                 <span className="block text-[11px] text-slate-500 dark:text-slate-300">Haz clic para cerrar</span>
               </span>
             )}
@@ -519,7 +583,7 @@ export default function AssistantSidebar() {
                 {moreOpen && (
                   <div
                     ref={moreMenuRef}
-                    className="absolute left-full top-1/2 -translate-y-1/2 ml-2 z-30 min-w-[178px] rounded-xl border border-slate-200/70 dark:border-slate-700/60 bg-white dark:bg-slate-900 shadow-lg p-2 space-y-1"
+                    className={`absolute z-30 ${moreMenuPlacement} min-w-[178px] rounded-xl border border-slate-200/70 dark:border-slate-700/60 bg-white dark:bg-slate-900 shadow-lg p-2 space-y-1`}
                     role="menu"
                   >
                     {extraActions.map((action) => (
@@ -591,7 +655,7 @@ export default function AssistantSidebar() {
           {expanded && (
             <div className={`${hasFeed ? 'mt-auto border-t' : 'flex-1 border-t'} border-slate-200/70 dark:border-slate-700/60 bg-white/70 dark:bg-slate-900/70 px-3 py-3 flex flex-col space-y-3`}
             >
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Chat asistente</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Chat</div>
               <div ref={chatRef} className={`${hasFeed ? 'max-h-48' : 'flex-1'} overflow-y-auto space-y-2 pr-1 text-sm`}>
                 {chatMessages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.author === "user" ? "justify-end" : "justify-start"}`}>
@@ -612,6 +676,7 @@ export default function AssistantSidebar() {
                     value={chatInput}
                     onChange={(event) => setChatInput(event.target.value)}
                     placeholder="Escribe un mensaje..."
+                    ref={chatInputRef}
                     className="w-full rounded-full border border-slate-200/70 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90 px-3 py-2 text-sm text-slate-700 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-400/80"
                   />
                 </div>
@@ -627,6 +692,43 @@ export default function AssistantSidebar() {
           )}
         </div>
       </div>
+      {!expanded && (
+        <div className="absolute inset-x-0 bottom-4 flex justify-center z-10">
+          <button
+            type="button"
+            onClick={handleChatShortcut}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 via-indigo-500 to-fuchsia-500 text-white shadow-lg shadow-sky-900/40 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/80 transition-transform hover:scale-105"
+            aria-label="Abrir chat del asistente"
+            title="Abrir chat del asistente"
+          >
+            <LuMessageCircle size={20} aria-hidden />
+          </button>
+        </div>
+      )}
+
+      {notesOpen && (
+        <div className="absolute inset-0 z-50 bg-white/95 dark:bg-slate-900/95 border-l border-slate-200/70 dark:border-slate-700/60 shadow-2xl flex flex-col" role="dialog" aria-modal="true">
+          <header className="flex items-center justify-between px-4 py-3 border-b border-slate-200/70 dark:border-slate-700/60">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Notas de la lección</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Guardado local por lección · {notesLessonId}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setNotesOpen(false)}
+              className="inline-flex items-center justify-center rounded-full p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800"
+              aria-label="Cerrar notas"
+            >
+              <LuX size={16} aria-hidden />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <LessonNotes lessonId={notesLessonId} className="border-0 shadow-none" />
+          </div>
+        </div>
+      )}
+
     </aside>
   );
 }
+

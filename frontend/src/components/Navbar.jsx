@@ -1,6 +1,6 @@
 // src/components/Navbar.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AuthModal from "./AuthModal";
 import { useToast } from "./Toast";
@@ -16,6 +16,8 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const hideLandingLinks = location.pathname.startsWith("/missions");
 
   // Cerrar menú ¿Dudas? con ESC / click afuera
   const faqRef = useRef(null);
@@ -45,12 +47,14 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop links centrados */}
-          <div className="hidden md:flex items-center gap-6 md:absolute md:left-1/2 md:-translate-x-1/2">
-            <Link to="/#cursos" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Cursos</Link>
-            <Link to="/#historias" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Historias</Link>
-            <Link to="/#plan" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Plan</Link>
-            <Link to="/#blog" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Blog</Link>
-          </div>
+          {!hideLandingLinks && (
+            <div className="hidden md:flex items-center gap-6 md:absolute md:left-1/2 md:-translate-x-1/2">
+              <Link to="/#cursos" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Cursos</Link>
+              <Link to="/#historias" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Historias</Link>
+              <Link to="/#plan" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Plan</Link>
+              <Link to="/#blog" className="text-slate-200 hover:text-white text-[15px] sm:text-base font-medium">Blog</Link>
+            </div>
+          )}
 
           {/* Acciones derechas */}
           <div className="hidden md:flex items-center gap-3">
@@ -197,10 +201,14 @@ export default function Navbar() {
         {mobileOpen && (
           <div className="md:hidden border-t border-white/10 bg-slate-900/95 backdrop-blur">
             <div className="px-4 py-3 space-y-2">
-              <Link to="/#cursos" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Cursos</Link>
-              <Link to="/#historias" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Historias</Link>
-              <Link to="/#plan" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Plan</Link>
-              <Link to="/#blog" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Blog</Link>
+              {!hideLandingLinks && (
+                <>
+                  <Link to="/#cursos" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Cursos</Link>
+                  <Link to="/#historias" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Historias</Link>
+                  <Link to="/#plan" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Plan</Link>
+                  <Link to="/#blog" onClick={()=>setMobileOpen(false)} className="block text-slate-200 hover:text-white text-sm">Blog</Link>
+                </>
+              )}
               {/* ¿Dudas? en mobile */}
               <button
                 onClick={() => setFaqMobileOpen((v)=>!v)}

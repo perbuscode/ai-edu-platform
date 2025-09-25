@@ -203,7 +203,7 @@ export default function StudyPlan() {
           <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-slate-800 bg-black aspect-video mb-4 grid place-items-center">
             <span className="text-white/70 text-sm">[Player de video embebido]</span>
           </div>
-          <p className="text-sm text-gray-600 dark:text-slate-300">Duración: {course?.currentLesson?.duration || "45 min"}</p>
+          <p className="text-sm text-slate-700">Duración: <span className="font-semibold text-slate-900">{course?.currentLesson?.duration || "45 min"}</span></p>
         </div>
       );
     }

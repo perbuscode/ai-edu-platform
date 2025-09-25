@@ -17,41 +17,41 @@ export default function Employability({ observe }) {
       </div>
 
       <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="rounded-lg border border-slate-200 p-4">
+        <div className="rounded-lg border border-slate-200 p-4 flex flex-col gap-3">
           <h4 className="font-medium text-slate-900">Construir mi CV</h4>
           <p className="text-sm text-slate-600 mt-1">Extrae logros y proyectos</p>
           <button
-            className="mt-3 px-3 py-2 rounded-lg bg-slate-900 text-white text-sm w-full"
+            className="mt-auto px-3 py-2 rounded-lg bg-slate-900 text-white text-sm w-full"
             onClick={() => navigate('/cv')}
           >
             Generar CV
           </button>
         </div>
-        <div className="rounded-lg border border-slate-200 p-4">
+        <div className="rounded-lg border border-slate-200 p-4 flex flex-col gap-3">
           <h4 className="font-medium text-slate-900">Simular entrevista</h4>
           <p className="text-sm text-slate-600 mt-1">Preguntas técnicas y de negocio.</p>
           <button
-            className="mt-3 px-3 py-2 rounded-lg bg-slate-900 text-white text-sm w-full"
+            className="mt-auto px-3 py-2 rounded-lg bg-slate-900 text-white text-sm w-full"
             onClick={() => navigate('/practice-interview')}
           >
             Practicar
           </button>
         </div>
-        <div className="rounded-lg border border-slate-200 p-4">
+        <div className="rounded-lg border border-slate-200 p-4 flex flex-col gap-3">
           <h4 className="font-medium text-slate-900">Portafolio</h4>
           <p className="text-sm text-slate-600 mt-1">Todos tus proyectos y evidencias.</p>
           <button
-            className="mt-3 px-3 py-2 rounded-lg bg-slate-900 text-white text-sm w-full"
+            className="mt-auto px-3 py-2 rounded-lg bg-slate-900 text-white text-sm w-full"
             onClick={() => navigate('/dashboard/portafolio')}
           >
             Ver Portafolio
           </button>
         </div>
-        <div className="rounded-lg border border-slate-200 p-4">
+        <div className="rounded-lg border border-slate-200 p-4 flex flex-col gap-3">
           <h4 className="font-medium text-slate-900">Oportunidades</h4>
           <p className="text-sm text-slate-600 mt-1">Ofertas relacionadas a tus skills.</p>
           <a
-            className="mt-3 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm w-full"
+            className="mt-auto inline-flex items-center justify-center px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm w-full"
             href="https://www.linkedin.com/jobs/"
             target="_blank"
             rel="noopener noreferrer"

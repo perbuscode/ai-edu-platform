@@ -9,7 +9,7 @@ export default function Certificates() {
   const { activeId } = useActiveSection();
   const links = [];
   return (
-    <DashboardLayout links={links} activeId={activeId} onLinkClick={() => {}}>
+    <DashboardLayout links={links} activeId={activeId} onLinkClick={() => {}} title="Certificaciones">
       <Certifications />
       <FloatingAssistant placement="top-right" strategy="absolute" offsetClass="top-20" />
     </DashboardLayout>

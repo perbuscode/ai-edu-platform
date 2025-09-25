@@ -27,9 +27,9 @@ export default function Courses({ observe, courses, onOpenCourse, onOpenCerts })
             </div>
             <h4 className="text-lg font-semibold text-slate-900 mb-1">{c.title}</h4>
             <p className="text-slate-600 text-sm mb-4">{c.description}</p>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <span className="text-sm text-emerald-700 font-medium">{c.progress}% completado</span>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => onOpenCourse ? onOpenCourse(c) : null}
                   className="px-3 py-1.5 rounded-lg bg-sky-600 text-white text-sm font-medium shadow hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 whitespace-nowrap"

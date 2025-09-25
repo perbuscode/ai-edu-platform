@@ -9,12 +9,13 @@ import Courses from "./components/Courses";
 import Testimonials from "./components/Testimonials";
 import ChatPlanner from "./components/ChatPlanner";
 import Footer from "./components/Footer";
-// FAQ flotante removido; usamos menú en Navbar
+// FAQ flotante removido; usamos menu en Navbar
 import PlanExampleModal from "./components/PlanExampleModal";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Certificates from "./pages/Certificates";
 import PortfolioProjects from "./pages/PortfolioProjects";
+import MissionDetail from "./pages/MissionDetail";
 import VirtualRoom from "./pages/VirtualRoom";
 import Course from "./pages/Course";
 import Profile from "./pages/Profile";
@@ -86,7 +87,8 @@ export default function App() {
     location.pathname.startsWith("/cv") ||
     location.pathname.startsWith("/practice")
   );
-  const showAssistantSidebar = location.pathname.startsWith("/dashboard");
+  const assistantPaths = ["/dashboard", "/course", "/missions", "/cv", "/practice-interview"];
+  const showAssistantSidebar = assistantPaths.some((path) => location.pathname.startsWith(path));
 
   return (
     <div className="bg-slate-900 min-h-screen">
@@ -96,7 +98,8 @@ export default function App() {
         <Route path="/faqs" element={<Faqs />} />
         <Route path="/pqr" element={<Pqr />} />
         <Route path="/contacto" element={<Contacto />} />
-        { /* Blog ahora es sección en landing; se elimina ruta dedicada */ }
+        <Route path="/missions/:missionId" element={<MissionDetail />} />
+        { /* Blog ahora es secciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n en landing; se elimina ruta dedicada */ }
         <Route
           path="/dashboard"
           element={
@@ -162,7 +165,7 @@ export default function App() {
           }
         />
       </Routes>
-      {/* Asesor IA visible solo en dashboard */}
+      {/* Tutor IA visible solo en dashboard */}
       {showAssistantSidebar && <AssistantSidebar />}
     </div>
   );

@@ -3,30 +3,45 @@ import { getAuth } from 'firebase/auth';
 
 const BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5050';
 
-export async function postJSON(path, body, opts = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
-  // Intenta incluir ID token de Firebase si hay usuario
+async function withAuthHeaders(headers = {}) {
+  const result = { 'Content-Type': 'application/json', ...headers };
   try {
     const user = getAuth()?.currentUser;
     if (user) {
       const token = await user.getIdToken();
-      headers['Authorization'] = `Bearer ${token}`;
+      result.Authorization = `Bearer ${token}`;
     }
   } catch {}
+  return result;
+}
 
+async function handleResponse(res) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data?.error || data?.message || 'Error en la solicitud';
+    const error = new Error(msg);
+    error.status = res.status;
+    error.data = data;
+    throw error;
+  }
+  return data;
+}
+
+export async function postJSON(path, body, opts = {}) {
+  const headers = await withAuthHeaders(opts.headers);
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = data?.error || 'Error en la solicitud';
-    const e = new Error(msg);
-    e.status = res.status;
-    e.data = data;
-    throw e;
-  }
-  return data;
+  return handleResponse(res);
 }
 
+export async function getJSON(path, opts = {}) {
+  const headers = await withAuthHeaders(opts.headers);
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'GET',
+    headers,
+  });
+  return handleResponse(res);
+}

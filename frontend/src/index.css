@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -12,7 +12,7 @@ html {
   scroll-behavior: smooth;
 }
 
-/* ApariciÃ³n suave para menÃºs desplegables */
+/* Aparición suave para menús desplegables */
 @keyframes dropdownIn {
   from { opacity: 0; transform: translateY(4px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
@@ -26,9 +26,9 @@ body {
 /* Quitar overlay de la barra de scroll en toda la app */
 /* Se mantiene scrollbar-gutter estable en html para evitar saltos */
 
-/* Contenedores y tÃ­tulos por defecto (opcional) */
+/* Contenedores y títulos por defecto (opcional) */
 h1, h2, h3, h4, h5 {
-  /* En tema oscuro, tÃ­tulos claros por defecto */
+  /* En tema oscuro, títulos claros por defecto */
   @apply text-slate-100;
 }
 
@@ -50,17 +50,17 @@ h1, h2, h3, h4, h5 {
 
 /* En mobile, reserva espacio para el rail colapsado (3rem) */
 .with-sidebar-collapsed { margin-left: 3rem; }  /* w-12 */
-/* Sidebar expandido tambiÃ©n desplaza el contenido en mobile */
+/* Sidebar expandido también desplaza el contenido en mobile */
 .with-sidebar-expanded { margin-left: 16rem; } /* w-64 */
-/* TransiciÃ³n del contenedor para animar en mobile y desktop */
+/* Transición del contenedor para animar en mobile y desktop */
 #app { transition: margin-left .2s ease; }
 
-/* AnimaciÃ³n de ancho del sidebar (cuando colapsa/expande) */
+/* Animación de ancho del sidebar (cuando colapsa/expande) */
 #sidebar { transition: width .2s ease, transform .2s ease; }
 #sidebar.collapsed { width: 3rem; }
 #sidebar.expanded { width: 16rem; }
 
-/* Asesor IA (derecha): reservar espacio para que no se superponga sobre el contenido */
+/* Tutor IA (derecha): reservar espacio para que no se superponga sobre el contenido */
 body.assistant-rail-active { margin-right: var(--assistant-rail-width, 3.5rem); transition: margin-right .5s cubic-bezier(0.22, 1, 0.36, 1); }
 body.assistant-rail-collapsed { --assistant-rail-width: 3.5rem; } /* w-14 (56px) */
 body.assistant-rail-expanded { --assistant-rail-width: 11.25rem; } /* 180px */
@@ -92,7 +92,8 @@ body.assistant-rail-expanded { --assistant-rail-width: 11.25rem; } /* 180px */
 .btn-glow { position: relative; }
 .btn-glow-border { display: none !important; }
 
-/* BotÃ³n con borde animado tipo haz de luz (robusto y sin mÃ¡scaras) */
+/* Botón con borde animado tipo haz de luz (robusto y sin máscaras) */
 /* removed animated border styles */
-/* BotÃ³n con borde animado (estilo ejemplo con ::before) */
+/* Botón con borde animado (estilo ejemplo con ::before) */
+
 

@@ -4,7 +4,7 @@ import { SiYoutube, SiTiktok, SiFacebook, SiLinkedin } from "react-icons/si";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 
-export default function DashboardLayout({ links, activeId, onLinkClick, children }) {
+export default function DashboardLayout({ links, activeId, onLinkClick, children, title }) {
   // Global smooth scrolling for anchor navigation
   useEffect(() => {
     const prev = document.documentElement.style.scrollBehavior;
@@ -35,7 +35,7 @@ export default function DashboardLayout({ links, activeId, onLinkClick, children
       <Sidebar links={links} activeId={activeId} onLinkClick={onLinkClick} collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
 
       {/* Topbar fixed with left offset */}
-      <Topbar leftOffsetClass={leftOffsetClass} onToggleSidebar={() => setCollapsed((v) => !v)} collapsed={collapsed} />
+      <Topbar leftOffsetClass={leftOffsetClass} title={title} />
 
       {/* Content area with left padding for sidebar and top padding for header */}
       <main className={`${contentPadClass} pt-16 relative transition-all duration-300 ease-in-out`}>

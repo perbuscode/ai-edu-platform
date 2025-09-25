@@ -13,7 +13,7 @@ export default function VirtualRoom() {
     { href: "#empleo", label: "Empleabilidad" },
   ];
   return (
-    <DashboardLayout links={links} activeId={activeId} onLinkClick={() => {}}>
+    <DashboardLayout links={links} activeId={activeId} onLinkClick={() => {}} title="Salón de clases">
       <section className="bg-white rounded-xl shadow-xl border border-slate-200 text-slate-900 overflow-hidden">
         <div className="px-5 py-4 flex items-center justify-between border-b border-slate-200">
           <div>

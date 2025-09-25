@@ -67,7 +67,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <DashboardLayout links={links.filter((l) => !["#metrics"].includes(l?.href))} activeId={activeId} onLinkClick={onLinkClick}>
+    <DashboardLayout links={links.filter((l) => !["#metrics"].includes(l?.href))} activeId={activeId} onLinkClick={onLinkClick} title="Dashboard del estudiante">
       <Intro observe={observe} />
       <Metrics observe={observe} />
       <NextClasses observe={observe} />

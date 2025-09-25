@@ -24,9 +24,16 @@ export default function Sidebar({ links = [], activeId, onLinkClick, collapsed =
 
   return (
     <aside className={`fixed inset-y-0 left-0 ${collapsed ? 'w-10' : 'w-56'} bg-slate-900/80 border-r border-white/10 backdrop-blur z-40 transition-[width] duration-300 ease-in-out overflow-hidden flex flex-col`}>
-      <div className={`h-16 border-b border-white/10 ${collapsed ? 'grid place-items-center px-0' : 'relative flex items-center justify-end px-3'}`}>
+      <div className={`border-b border-white/10 ${collapsed ? 'h-16 grid place-items-center px-0' : 'h-16 relative flex items-center justify-end px-3'}`}>
         {!collapsed && (
-          <img src="/images/logo-edvance.png" alt="Edvance" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none h-20 md:h-30 w-auto" />
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900/80 rounded-md"
+            aria-label="Ir al landing de Edvance"
+          >
+            <img src="/images/logo-edvance.png" alt="Edvance" className="h-20 md:h-30 w-auto" />
+          </button>
         )}
         <button
           type="button"
@@ -43,20 +50,21 @@ export default function Sidebar({ links = [], activeId, onLinkClick, collapsed =
         {links.map((l) => {
           const key = (l?.href || '').replace('#', '');
           const isActive = activeId === key;
-          const base = `flex items-center ${collapsed ? 'justify-center px-2' : 'px-3'} py-2 rounded hover:bg-white/10 overflow-hidden whitespace-nowrap`;
-          const active = isActive ? "nav-active" : "";
+          const layoutClasses = collapsed ? 'justify-center px-0 py-3' : 'justify-start items-center gap-1.5 px-2 py-2 sm:gap-2 sm:px-3';
+          const baseClasses = `w-full flex items-center ${layoutClasses} rounded hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 ${collapsed ? '' : 'overflow-hidden whitespace-nowrap'}`;
+          const activeClass = isActive ? "nav-active" : "";
+          const iconWrapperClass = `inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-200 ${collapsed ? '' : 'bg-white/5'}`;
           const shouldHide = HIDDEN_KEYS.has(key);
 
           if (shouldHide) {
-            // Mantiene el espacio en el layout pero oculta el contenido e interacciones
             return (
               <div
                 key={l.href}
                 aria-hidden
-                className={`${base} ${collapsed ? '' : ''} invisible`}
+                className={`${baseClasses} opacity-0 pointer-events-none`}
               >
-                <span className="w-5 h-5" />
-                {!collapsed && <span className="ml-2">&nbsp;</span>}
+                <span className={iconWrapperClass} aria-hidden />
+                {!collapsed && <span className="flex-1 min-w-0 text-left">&nbsp;</span>}
               </div>
             );
           }
@@ -65,15 +73,20 @@ export default function Sidebar({ links = [], activeId, onLinkClick, collapsed =
             <a
               key={l.href}
               href={l.href}
-              className={`${base} ${active}`}
+              className={`${baseClasses} ${activeClass}`}
               title={l.label}
               onClick={(e) => {
                 e.preventDefault();
                 onLinkClick?.(l.href);
               }}
+              aria-current={isActive ? 'page' : undefined}
             >
-              <span className="w-5 h-5 grid place-items-center text-slate-200">{iconFor(l.href, l.label)}</span>
-              {!collapsed && <span className="ml-2">{l.label}</span>}
+              <span className={iconWrapperClass}>{iconFor(l.href, l.label)}</span>
+              {collapsed ? (
+                <span className="sr-only">{l.label}</span>
+              ) : (
+                <span className="flex-1 min-w-0 truncate text-left">{l.label}</span>
+              )}
             </a>
           );
         })}
@@ -81,7 +94,7 @@ export default function Sidebar({ links = [], activeId, onLinkClick, collapsed =
 
       {/* Sección: Certificaciones (solo en Dashboard) */}
       {showCerts && !collapsed && (
-        <div className="px-4 mt-20 md:mt-36 lg:mt-52">
+        <div className="px-4 mt-10 md:mt-20 lg:mt-28">
           <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Certificaciones</h4>
           <ul className="space-y-1">
             {[
