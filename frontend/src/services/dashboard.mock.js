@@ -85,3 +85,17 @@ export const getSkillsMap = async () => {
     ],
   };
 };
+
+export const getStudyPlan = async () => {
+  await delay();
+  return {
+    title: "Plan de Power BI",
+    goal: "Conviértete en BI Analyst",
+    blocks: [
+      {
+        title: "Fundamentos de Power BI",
+        bullets: ["Qué es BI y Power BI", "Power Query (ETL)"],
+      },
+    ],
+  };
+};

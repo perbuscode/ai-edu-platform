@@ -159,6 +159,19 @@ export default function AuthModal({ open, onClose, defaultTab = "login" }) {
               }}
               errorFromContext={error}
               onRegister={register}
+              onLoginWithGoogle={async () => {
+                try {
+                  setSubmitting(true);
+                  await loginWithGoogle();
+                  toast.success("Cuenta creada con Google");
+                  onClose?.();
+                  navigate("/dashboard");
+                } catch (e) {
+                  toast.error(e.message);
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
             />
           )}
 
@@ -379,6 +392,7 @@ function RegisterForm({
   onSuccess,
   errorFromContext,
   onRegister,
+  onLoginWithGoogle,
 }) {
   const { state, errors, submitting, handleChange, handleSubmit } = useAuthForm(
     {
@@ -387,7 +401,6 @@ function RegisterForm({
         email: "",
         password: "",
         confirm: "",
-        photoURL: "",
         terms: false,
       },
       validationFn: ({ name, email, password, confirm, terms }) => {
@@ -400,8 +413,8 @@ function RegisterForm({
         if (!terms) e.terms = "Debes aceptar los términos";
         return e;
       },
-      onSubmitFn: ({ name, email, password, photoURL }) =>
-        onRegister({ name, email, password, photoURL: photoURL || undefined }),
+      onSubmitFn: ({ name, email, password }) =>
+        onRegister({ name, email, password }),
       onSuccess,
       errorFromContext,
     }
@@ -458,15 +471,6 @@ function RegisterForm({
         autoComplete="new-password"
         invalid={!!errors.confirm}
       />
-      <Field
-        label="URL de foto (opcional)"
-        id="reg-photo"
-        type="url"
-        value={state.photoURL}
-        onChange={handleChange("photoURL")}
-        placeholder="https://..."
-        autoComplete="photo"
-      />
 
       <div className="flex items-start gap-2">
         <input
@@ -497,7 +501,8 @@ function RegisterForm({
       <FormFooter
         submitting={submitting}
         submitLabel="Crear cuenta"
-        showGoogle={false}
+        onGoogle={onLoginWithGoogle}
+        showGoogle
       />
     </form>
   );

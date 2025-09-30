@@ -3,10 +3,15 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 import useChatWizard from "../hooks/useChatWizard.js";
 import StudyPlanModal from "./StudyPlanModal.jsx";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "../context/AuthContext.jsx";
+import { saveStudyPlan } from "../services/planService.js";
+import { useToast } from "./Toast.jsx";
 
 export default function ChatPlanner() {
   const [input, setInput] = useState("");
   const { messages, loadingPlan, step, submitTurn } = useChatWizard();
+  const { user } = useAuth();
+  const toast = useToast();
 
   const [isPlanOpen, setPlanOpen] = useState(false);
   const [plan, setPlan] = useState(null);
@@ -40,6 +45,21 @@ export default function ChatPlanner() {
       setPlanOpen(true);
     }
   }, [lastAssistantPlan]);
+
+  async function handleSavePlan(planToSave) {
+    if (!user) {
+      toast.error("Necesitas iniciar sesión para guardar tu plan.");
+      return;
+    }
+    try {
+      await saveStudyPlan(user.uid, planToSave);
+      toast.success("¡Plan guardado en tu perfil!");
+      setPlanOpen(false);
+    } catch (error) {
+      console.error("Error saving plan:", error);
+      toast.error("No se pudo guardar el plan. Intenta de nuevo.");
+    }
+  }
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -205,6 +225,8 @@ export default function ChatPlanner() {
         plan={plan}
         isOpen={isPlanOpen}
         onClose={() => setPlanOpen(false)}
+        onSave={handleSavePlan}
+        isAuthenticated={!!user}
       />
     </>
   );

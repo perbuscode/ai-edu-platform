@@ -17,16 +17,21 @@ export default function Modal({ open, title, onClose, children }) {
 
   const handleKeyDown = useCallback(
     (event) => {
+      if (!open) return;
+
+      // Cerrar con Escape
       if (event.key === "Escape") {
         event.preventDefault();
         onClose?.();
         return;
       }
 
+      // Trap de Tab
       if (event.key !== "Tab") return;
 
       const dialogNode = dialogRef.current;
       if (!dialogNode) return;
+
       const focusable = dialogNode.querySelectorAll(FOCUSABLE_SELECTOR);
       if (focusable.length === 0) {
         event.preventDefault();
@@ -36,6 +41,7 @@ export default function Modal({ open, title, onClose, children }) {
 
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
+
       if (event.shiftKey) {
         if (document.activeElement === first) {
           event.preventDefault();
@@ -49,9 +55,10 @@ export default function Modal({ open, title, onClose, children }) {
         first.focus();
       }
     },
-    [onClose]
+    [open, onClose]
   );
 
+  // Foco inicial y restauración
   useEffect(() => {
     if (!open) return undefined;
 
@@ -75,30 +82,35 @@ export default function Modal({ open, title, onClose, children }) {
     };
   }, [open]);
 
+  // Listener global para teclado (evita onKeyDown en elementos no interactivos)
+  useEffect(() => {
+    if (!open) return;
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, handleKeyDown]);
+
   if (!open) return null;
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[90] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
+      tabIndex={-1}
     >
-      <div
-        className="absolute inset-0 bg-black/50"
-        aria-label="Cerrar modal"
+      {/* Overlay: interactivo pero no focuseable ni anunciado */}
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/50 w-full h-full cursor-default"
+        aria-hidden="true"
+        tabIndex={-1}
         onClick={onClose}
-        role="button"
-        tabIndex="0"
-        onKeyDown={handleKeyDown}
       />
       <div
-        ref={dialogRef}
         className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden"
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-        onKeyDown={handleKeyDown}
-        role="dialog"
-        tabIndex={-1}
+        role="document"
       >
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 id={titleId} className="text-lg font-semibold text-slate-900">

@@ -16,6 +16,18 @@ export default function Navbar() {
   const location = useLocation();
   const hideLandingLinks = location.pathname.startsWith("/missions");
 
+  useEffect(() => {
+    if (location.hash === "#register") {
+      setDefaultTab("register");
+      setAuthOpen(true);
+      navigate(location.pathname, { replace: true });
+    } else if (location.hash === "#login") {
+      setDefaultTab("login");
+      setAuthOpen(true);
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.hash, navigate]);
+
   async function handleLogout() {
     await logout();
     toast.success("Sesión cerrada");

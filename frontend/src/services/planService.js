@@ -1,4 +1,6 @@
 // frontend/src/services/planService.js
+import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
+
 export async function generatePlan({ objective, level, hoursPerWeek, weeks }) {
   const base = process.env.REACT_APP_API_BASE_URL || "http://localhost:5050";
 
@@ -21,4 +23,13 @@ export async function generatePlan({ objective, level, hoursPerWeek, weeks }) {
   }
 
   return data.plan;
+}
+
+export async function saveStudyPlan(uid, plan) {
+  const db = getFirestore();
+  if (!db || !uid) return false;
+
+  const ref = doc(db, `users/${uid}/studyPlan/main`);
+  await setDoc(ref, { ...plan, updatedAt: serverTimestamp() }, { merge: true });
+  return true;
 }

@@ -7,7 +7,12 @@ import React, {
   useState,
 } from "react";
 import PropTypes from "prop-types";
-import { getCourses, getMetrics, getSkillsMap } from "../services/dashboard";
+import {
+  getCourses,
+  getMetrics,
+  getSkillsMap,
+  getStudyPlan,
+} from "../services/dashboard";
 
 const DashboardContext = createContext(undefined);
 
@@ -15,6 +20,7 @@ export function DashboardProvider({ children }) {
   const [metrics, setMetrics] = useState(null);
   const [courses, setCourses] = useState(null);
   const [skills, setSkills] = useState(null);
+  const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -22,14 +28,17 @@ export function DashboardProvider({ children }) {
     setLoading(true);
     setError(null);
     try {
-      const [nextMetrics, nextCourses, nextSkills] = await Promise.all([
-        getMetrics(),
-        getCourses(),
-        getSkillsMap(),
-      ]);
+      const [nextMetrics, nextCourses, nextSkills, nextStudyPlan] =
+        await Promise.all([
+          getMetrics(),
+          getCourses(),
+          getSkillsMap(),
+          getStudyPlan(),
+        ]);
       setMetrics(nextMetrics);
       setCourses(nextCourses);
       setSkills(nextSkills);
+      setStudyPlan(nextStudyPlan);
     } catch (err) {
       setError(err?.message || "Error al cargar datos");
     } finally {
@@ -42,8 +51,16 @@ export function DashboardProvider({ children }) {
   }, [load]);
 
   const value = useMemo(
-    () => ({ metrics, courses, skills, loading, error, refresh: load }),
-    [metrics, courses, skills, loading, error, load]
+    () => ({
+      metrics,
+      courses,
+      skills,
+      studyPlan,
+      loading,
+      error,
+      refresh: load,
+    }),
+    [metrics, courses, skills, studyPlan, loading, error, load]
   );
 
   return (

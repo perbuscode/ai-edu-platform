@@ -1,19 +1,101 @@
 // frontend/src/components/StudyPlanModal.jsx
 import React, { Fragment, useEffect, useMemo } from "react";
 import { Dialog, Transition } from "@headlessui/react";
+import { Link } from "react-router-dom";
 import {
   XMarkIcon,
   BookOpenIcon,
   DocumentTextIcon,
-  ArrowDownTrayIcon,
   PrinterIcon,
   BookmarkIcon,
   RocketLaunchIcon,
   BriefcaseIcon,
   CurrencyDollarIcon,
+  ClipboardDocumentListIcon,
+  ClockIcon,
+  UserPlusIcon,
 } from "@heroicons/react/24/outline";
 
-export default function StudyPlanModal({ plan, isOpen, onClose, onSave }) {
+// Usa horas del backend si existen; estima si no
+function useDurations(plan) {
+  return useMemo(() => {
+    if (!plan) return { perLesson: {}, perProject: {} };
+    const modules = Array.isArray(plan.blocks) ? plan.blocks : [];
+
+    const perLesson = {};
+    const perProject = {};
+    let hasProvided = false;
+
+    modules.forEach((m, mi) => {
+      const lessons = Array.isArray(m?.bullets) ? m.bullets : [];
+      const lessonHours = Array.isArray(m?.lessonHours) ? m.lessonHours : [];
+
+      if (
+        lessonHours.length === lessons.length &&
+        lessonHours.some((v) => Number(v) > 0)
+      ) {
+        hasProvided = true;
+        lessonHours.forEach((h, li) => {
+          perLesson[`${mi}:${li}`] = Number(h) || 0;
+        });
+      }
+      if (
+        m?.project &&
+        isFinite(Number(m?.projectHours)) &&
+        Number(m.projectHours) > 0
+      ) {
+        hasProvided = true;
+        perProject[`${mi}`] = Number(m.projectHours) || 0;
+      }
+    });
+
+    if (hasProvided) return { perLesson, perProject };
+
+    // Estimación si no hay datos
+    const hpw = Number(plan.hoursPerWeek || 0);
+    const weeks = Number(plan.durationWeeks || plan.weeks || 0);
+    const hoursTotal = hpw && weeks ? hpw * weeks : 0;
+    if (!hoursTotal) return { perLesson: {}, perProject: {} };
+
+    const lessonShare = 0.7;
+    const projectShare = 0.3;
+
+    const lessonsCount = modules.reduce(
+      (acc, m) => acc + (Array.isArray(m?.bullets) ? m.bullets.length : 0),
+      0
+    );
+    const projectsCount = modules.reduce(
+      (acc, m) => acc + (m?.project ? 1 : 0),
+      0
+    );
+
+    const hoursForLessons = Math.max(0, hoursTotal * lessonShare);
+    const hoursForProjects = Math.max(0, hoursTotal * projectShare);
+
+    const perLessonUnit = lessonsCount ? hoursForLessons / lessonsCount : 0;
+    const perProjectUnit = projectsCount ? hoursForProjects / projectsCount : 0;
+
+    modules.forEach((m, mi) => {
+      if (Array.isArray(m?.bullets)) {
+        m.bullets.forEach((_, li) => {
+          perLesson[`${mi}:${li}`] = perLessonUnit;
+        });
+      }
+      if (m?.project) perProject[`${mi}`] = perProjectUnit;
+    });
+
+    return { perLesson, perProject };
+  }, [plan]);
+}
+
+export default function StudyPlanModal({
+  plan,
+  isOpen,
+  onClose,
+  onSave,
+  isAuthenticated = false,
+  authPath = "/#register", // cámbialo a /register o /login según tu flujo
+}) {
   const modules = plan?.blocks || [];
   const skills = Array.isArray(plan?.skills) ? plan.skills.slice(0, 12) : [];
   const roles = Array.isArray(plan?.roles) ? plan.roles.slice(0, 3) : [];
@@ -30,7 +112,9 @@ export default function StudyPlanModal({ plan, isOpen, onClose, onSave }) {
     return hpw && weeks ? hpw * weeks : null;
   }, [plan]);
 
-  // Body lock (evita scroll del fondo)
+  const { perLesson, perProject } = useDurations(plan);
+
+  // Bloquear scroll de fondo
   useEffect(() => {
     if (isOpen) {
       document.body.classList.add("modal-open");
@@ -51,21 +135,6 @@ export default function StudyPlanModal({ plan, isOpen, onClose, onSave }) {
 
   if (!plan) return null;
 
-  function handleExportJSON() {
-    const blob = new Blob([JSON.stringify(plan, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const safe = (plan?.title || "plan-estudio")
-      .toLowerCase()
-      .replace(/[^a-z0-9-]+/g, "-");
-    a.href = url;
-    a.download = `${safe}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   function handlePrintPDF() {
     window.print();
   }
@@ -74,6 +143,23 @@ export default function StudyPlanModal({ plan, isOpen, onClose, onSave }) {
     if (typeof onSave === "function") onSave(plan);
   }
 
+  const Metric = ({ label, value }) => (
+    <div className="rounded-lg px-3 py-3 bg-white/10">
+      <div className="text-sm opacity-90 leading-tight">{label}</div>
+      <div className="text-base font-semibold whitespace-normal break-words leading-tight">
+        {value}
+      </div>
+    </div>
+  );
+
+  const HoursBadge = ({ hours }) =>
+    hours ? (
+      <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-slate-200 text-slate-700">
+        <ClockIcon className="h-3.5 w-3.5" />
+        {Math.round(hours)} h
+      </span>
+    ) : null;
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog
@@ -81,7 +167,7 @@ export default function StudyPlanModal({ plan, isOpen, onClose, onSave }) {
         className="relative z-[9999] print:z-auto"
         onClose={onClose}
       >
-        {/* Backdrop por debajo del panel */}
+        {/* Backdrop */}
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -94,7 +180,6 @@ export default function StudyPlanModal({ plan, isOpen, onClose, onSave }) {
           <div className="fixed inset-0 bg-black bg-opacity-60 z-[9998] print:hidden" />
         </Transition.Child>
 
-        {/* Contenedor de portal/scroll general del modal (por encima del backdrop) */}
         <div className="fixed inset-0 overflow-y-auto z-[9999]">
           <div className="flex min-h-full items-center justify-center p-4 text-center print:block">
             <Transition.Child
@@ -106,9 +191,8 @@ export default function StudyPlanModal({ plan, isOpen, onClose, onSave }) {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              {/* Panel con z superior al backdrop */}
               <Dialog.Panel className="relative z-[10000] w-full max-w-5xl transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-xl transition-all print:shadow-none print:rounded-none print:max-w-none">
-                {/* Header fijo */}
+                {/* Header */}
                 <div className="flex items-start justify-between px-6 pt-6 print:hidden">
                   <div>
                     <Dialog.Title
@@ -148,174 +232,160 @@ export default function StudyPlanModal({ plan, isOpen, onClose, onSave }) {
                   </button>
                 </div>
 
-                {/* Contenido con scroll interno */}
+                {/* CONTENIDO con scroll */}
                 <div className="mt-4 px-6 pb-6 max-h-[70vh] overflow-y-auto pr-1">
-                  {/* Hero / resumen */}
-                  <div className="rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white p-5 print:border print:border-slate-200">
-                    <div className="md:flex md:items-center md:justify-between gap-4">
-                      <div>
-                        <h4 className="text-xl font-semibold">Resumen</h4>
-                        <p className="opacity-90">{summary}</p>
-                      </div>
-                      <div className="mt-4 md:mt-0 grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                        <div className="bg-white/10 rounded-lg p-3">
-                          <div className="opacity-90">Duración</div>
-                          <div className="font-semibold">
-                            {plan?.durationWeeks || plan?.weeks} semanas
-                          </div>
-                        </div>
-                        <div className="bg-white/10 rounded-lg p-3">
-                          <div className="opacity-90">Horas / semana</div>
-                          <div className="font-semibold">
-                            {plan?.hoursPerWeek}
-                          </div>
-                        </div>
-                        {roles?.length ? (
-                          <div className="bg-white/10 rounded-lg p-3 col-span-2 md:col-span-1">
-                            <div className="opacity-90">Rol objetivo</div>
-                            <div className="font-semibold">{roles[0]}</div>
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Habilidades + roles/salario */}
-                  <div className="mt-6 grid md:grid-cols-3 gap-6">
-                    <div className="md:col-span-2">
-                      <h5 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
-                        Habilidades que desarrollarás
-                      </h5>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {skills.length ? (
-                          skills.map((s, i) => (
-                            <span
-                              key={i}
-                              className="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200"
-                            >
-                              {s}
-                            </span>
-                          ))
-                        ) : (
-                          <p className="text-slate-500 text-sm">
-                            Se mostrarán aquí a partir de los módulos.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="md:col-span-1 space-y-3">
-                      <h5 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
-                        Tu siguiente paso
-                      </h5>
-
-                      {roles?.length ? (
-                        <div className="rounded-lg border border-slate-200 bg-white p-4">
-                          <div className="flex items-center gap-2 text-slate-800 font-semibold">
-                            <BriefcaseIcon className="h-5 w-5" />
-                            Roles objetivo
-                          </div>
-                          <ul className="mt-2 text-sm text-slate-700 list-disc pl-5">
-                            {roles.map((r, i) => (
-                              <li key={i}>{r}</li>
-                            ))}
-                          </ul>
-                        </div>
+                  {/* Resumen */}
+                  <section className="rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white p-5 print:border print:border-slate-200">
+                    <h4 className="text-xl font-semibold mb-2">Resumen</h4>
+                    <p className="opacity-90">{summary}</p>
+                    <div className="mt-4 grid grid-cols-3 gap-3 max-w-xl">
+                      <Metric
+                        label="Duración"
+                        value={`${plan?.durationWeeks || plan?.weeks} semanas`}
+                      />
+                      <Metric
+                        label="Horas / semana"
+                        value={`${plan?.hoursPerWeek}`}
+                      />
+                      {roles?.[0] ? (
+                        <Metric label="Rol objetivo" value={roles[0]} />
                       ) : null}
-
-                      {salary?.length ? (
-                        <div className="rounded-lg border border-slate-200 bg-white p-4">
-                          <div className="flex items-center gap-2 text-slate-800 font-semibold">
-                            <CurrencyDollarIcon className="h-5 w-5" />
-                            Rangos salariales estimados
-                          </div>
-                          <ul className="mt-2 text-sm text-slate-700 space-y-1">
-                            {salary.map((s, i) => (
-                              <li key={i}>
-                                <span className="font-medium">{s.role}</span>:{" "}
-                                {s.currency} {Number(s.min).toLocaleString()} –{" "}
-                                {Number(s.max).toLocaleString()} / {s.period}
-                                {s.region ? ` · ${s.region}` : ""}
-                              </li>
-                            ))}
-                          </ul>
-                          <p className="mt-2 text-xs text-slate-500">
-                            *Estimaciones informativas. Pueden variar según
-                            mercado, región y experiencia.
-                          </p>
-                        </div>
-                      ) : null}
-
-                      <button
-                        type="button"
-                        className="mt-2 inline-flex items-center gap-2 rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700"
-                        onClick={() => alert("Checklist inicial pronto 😉")}
-                      >
-                        <RocketLaunchIcon className="h-5 w-5" />
-                        Empezar checklist
-                      </button>
                     </div>
-                  </div>
+                  </section>
 
-                  {/* Módulos */}
-                  <div className="mt-6 space-y-5">
+                  {/* Habilidades */}
+                  <section className="mt-6">
                     <h5 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
-                      Módulos del plan
+                      Habilidades que desarrollarás
                     </h5>
-                    {modules.map((module, index) => (
-                      <div
-                        key={index}
-                        className="rounded-lg border border-gray-200 bg-gray-50 p-4"
-                      >
-                        <div className="flex items-center">
-                          <BookOpenIcon className="h-6 w-6 text-sky-600 mr-3" />
-                          <h4 className="text-lg font-semibold text-gray-800">
-                            {module.title}
-                          </h4>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {skills.length ? (
+                        skills.map((s, i) => (
+                          <span
+                            key={i}
+                            className="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200"
+                          >
+                            {s}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-slate-500 text-sm">
+                          Se mostrarán aquí a partir de los módulos.
+                        </p>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* Roles y salarios */}
+                  <section className="mt-6 space-y-4">
+                    <h5 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                      Tu siguiente paso
+                    </h5>
+                    {roles?.length ? (
+                      <div className="rounded-lg border border-slate-200 bg-white p-4">
+                        <div className="flex items-center gap-2 text-slate-800 font-semibold">
+                          <BriefcaseIcon className="h-5 w-5" />
+                          Roles objetivo
                         </div>
-                        <ul className="mt-3 ml-9 list-disc space-y-2 pl-5 text-gray-700">
-                          {(module.bullets || []).map((lesson, lessonIndex) => (
-                            <li key={lessonIndex} className="flex items-start">
-                              <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
-                              <span>{lesson}</span>
+                        <ul className="mt-2 text-sm text-slate-700 list-disc pl-5">
+                          {roles.map((r, i) => (
+                            <li key={i}>{r}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    {salary?.length ? (
+                      <div className="rounded-lg border border-slate-200 bg-white p-4">
+                        <div className="flex items-center gap-2 text-slate-800 font-semibold">
+                          <CurrencyDollarIcon className="h-5 w-5" />
+                          Rangos salariales estimados
+                        </div>
+                        <ul className="mt-2 text-sm text-slate-700 space-y-1">
+                          {salary.map((s, i) => (
+                            <li key={i}>
+                              <span className="font-medium">{s.role}</span>:{" "}
+                              {s.currency} {Number(s.min).toLocaleString()} –{" "}
+                              {Number(s.max).toLocaleString()} / {s.period}
+                              {s.region ? ` · ${s.region}` : ""}
                             </li>
                           ))}
                         </ul>
-                        {(module.project || module.role) && (
-                          <div className="mt-3 ml-9 text-sm text-slate-600">
-                            {module.project && (
-                              <div>
-                                <span className="font-medium text-slate-800">
-                                  Proyecto:{" "}
-                                </span>
-                                {module.project}
+                        <p className="mt-2 text-xs text-slate-500">
+                          *Estimaciones informativas. Pueden variar según
+                          mercado, región y experiencia.
+                        </p>
+                      </div>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700"
+                      onClick={() => alert("Checklist inicial pronto 😉")}
+                    >
+                      <RocketLaunchIcon className="h-5 w-5" />
+                      Empezar checklist
+                    </button>
+                  </section>
+
+                  {/* Módulos */}
+                  <section className="mt-6 space-y-5">
+                    <h5 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                      Módulos del plan
+                    </h5>
+                    {modules.map((module, mi) => (
+                      <div
+                        key={mi}
+                        className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <BookOpenIcon className="h-6 w-6 text-sky-600 mr-3" />
+                            <h4 className="text-lg font-semibold text-gray-800">
+                              {module.title}
+                            </h4>
+                          </div>
+                        </div>
+                        {/* Temas */}
+                        <ul className="mt-3 ml-9 list-disc space-y-2 pl-5 text-gray-700">
+                          {(module.bullets || []).map((lesson, li) => (
+                            <li key={li} className="flex items-start gap-2">
+                              <DocumentTextIcon className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                              <span className="flex-1">{lesson}</span>
+                              <HoursBadge hours={perLesson[`${mi}:${li}`]} />
+                            </li>
+                          ))}
+                        </ul>
+                        {/* Proyecto */}
+                        {module.project && (
+                          <div className="mt-4 ml-9 rounded-xl border border-sky-200 bg-white p-4 shadow-sm">
+                            <div className="flex items-center gap-2 text-sky-700 font-semibold">
+                              <ClipboardDocumentListIcon className="h-5 w-5" />
+                              Proyecto del módulo
+                              <div className="ml-auto">
+                                <HoursBadge hours={perProject[`${mi}`]} />
                               </div>
-                            )}
+                            </div>
+                            <p className="mt-2 text-sm text-slate-700">
+                              {module.project}
+                            </p>
                             {module.role && (
-                              <div>
-                                <span className="font-medium text-slate-800">
-                                  Rol simulado:{" "}
+                              <p className="mt-2 text-xs text-slate-500">
+                                Rol simulado:{" "}
+                                <span className="font-medium text-slate-700">
+                                  {module.role}
                                 </span>
-                                {module.role}
-                              </div>
+                              </p>
                             )}
                           </div>
                         )}
                       </div>
                     ))}
-                  </div>
+                  </section>
                 </div>
 
-                {/* Acciones fijas abajo */}
+                {/* Acciones (sin JSON). CTA condicional según sesión */}
                 <div className="px-6 pb-6 flex flex-wrap gap-3 justify-end print:hidden">
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                    onClick={handleExportJSON}
-                  >
-                    <ArrowDownTrayIcon className="h-5 w-5" />
-                    Descargar JSON
-                  </button>
                   <button
                     type="button"
                     className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
@@ -324,14 +394,26 @@ export default function StudyPlanModal({ plan, isOpen, onClose, onSave }) {
                     <PrinterIcon className="h-5 w-5" />
                     Exportar PDF
                   </button>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-2 rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700"
-                    onClick={handleSave}
-                  >
-                    <BookmarkIcon className="h-5 w-5" />
-                    Guardar en mi perfil
-                  </button>
+
+                  {isAuthenticated ? (
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700"
+                      onClick={handleSave}
+                    >
+                      <BookmarkIcon className="h-5 w-5" />
+                      Guardar en mi perfil
+                    </button>
+                  ) : (
+                    <Link
+                      to={authPath}
+                      onClick={onClose}
+                      className="inline-flex items-center gap-2 rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700"
+                    >
+                      <UserPlusIcon className="h-5 w-5" />
+                      Crear cuenta y guardar
+                    </Link>
+                  )}
                 </div>
 
                 {/* Pie impresión */}

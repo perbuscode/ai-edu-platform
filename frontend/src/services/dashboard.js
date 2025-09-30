@@ -12,3 +12,4 @@ const useMocks = String(flag ?? "").toLowerCase() === "true";
 export const getMetrics = useMocks ? mock.getMetrics : real.getMetrics;
 export const getCourses = useMocks ? mock.getCourses : real.getCourses;
 export const getSkillsMap = useMocks ? mock.getSkillsMap : real.getSkillsMap;
+export const getStudyPlan = useMocks ? mock.getStudyPlan : real.getStudyPlan;
