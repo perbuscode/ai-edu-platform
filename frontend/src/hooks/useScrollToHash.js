@@ -27,6 +27,6 @@ export function useScrollToHash(deps = []) {
     }
 
     requestAnimationFrame(tryScroll);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, deps);
 }
