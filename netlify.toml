@@ -1,11 +1,11 @@
+[functions]
+directory = "netlify/functions"
+
 [build]
   base = "frontend"
   command = "npm run build"
-  publish = "build"
+  publish = "frontend/build"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--legacy-peer-deps"
-
-# [[plugins]]
-#   package = "@netlify/plugin-cache"
