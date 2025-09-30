@@ -19,17 +19,17 @@ Plataforma educativa basada en IA que permite a los usuarios solicitar cursos pe
 
 ## Configuración y ejecución (local)
 
-1) Backend (API de planes)
+1. Backend (API de planes)
 
 - Entrar a `backend/` y copiar `.env.example` a `.env`.
-- Establecer `OPENAI_API_KEY`. Si no la configuras, el backend usa un plan simulado (modo mock).
+- Establecer `OPENAI_API_KEY`. Si no la configuras, el backend usa un plan simulado (modo de prueba).
 - Opcional Firestore: define `GOOGLE_APPLICATION_CREDENTIALS` con la ruta al JSON de service account o `FIREBASE_SERVICE_ACCOUNT` (contenido JSON) para guardar planes bajo `users/{uid}/plans`.
 - Instalar y ejecutar:
   - `npm i`
   - `npm start` (por defecto puerto 5050)
 - Tests: `npm test` (usa mock automáticamente)
 
-2) Frontend (React)
+2. Frontend (React)
 
 - Entrar a `frontend/` y crear/editar `.env.local` con:
   - `REACT_APP_API_BASE_URL=http://localhost:5050`
@@ -45,8 +45,9 @@ Plataforma educativa basada en IA que permite a los usuarios solicitar cursos pe
 
 ## Notas
 
-- UI en español (guardar archivos en UTF‑8 para evitar problemas de codificación).
+- La interfaz de usuario está en español (guardar archivos en UTF-8 para evitar problemas de codificación).
 - En despliegues sin backend, puedes dejar sin `OPENAI_API_KEY` o activar `MOCK_PLAN=1` para planes simulados.
 
 ## Autor
+
 GitHub: [perbuscode](https://github.com/perbuscode)

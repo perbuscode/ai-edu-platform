@@ -1,9 +1,20 @@
 // src/components/missions/DiagnosticCard.jsx
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useToast } from "../Toast";
 import DiagnosticTest from "./DiagnosticTest";
 import RubricModal from "./RubricModal";
-import { startDiagnostic, submitDiagnostic, getDiagnosticRubric } from "../../services/diagnostics";
+import {
+  startDiagnostic,
+  submitDiagnostic,
+  getDiagnosticRubric,
+} from "../../services/diagnostics";
 import { track } from "../../utils/analytics";
 import { assistantPush } from "../../utils/assistant";
 
@@ -41,7 +52,10 @@ function statusLabel(status) {
   }
 }
 
-const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, ref) {
+const DiagnosticCard = forwardRef(function DiagnosticCard(
+  { userId, courseId },
+  ref
+) {
   const toast = useToast();
   const [status, setStatus] = useState(STATUS.IDLE);
   const [attempt, setAttempt] = useState(null);
@@ -52,7 +66,10 @@ const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, 
   const [rubricLoading, setRubricLoading] = useState(false);
   const testRef = useRef(null);
 
-  const storageKeys = useMemo(() => buildStorageKeys(userId, courseId), [userId, courseId]);
+  const storageKeys = useMemo(
+    () => buildStorageKeys(userId, courseId),
+    [userId, courseId]
+  );
 
   useEffect(() => {
     try {
@@ -71,26 +88,52 @@ const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, 
         });
         setStatus(STATUS.COMPLETED);
         if (storedAttemptId) {
-          setAttempt({ attemptId: storedAttemptId, userId, courseId, startedAt: new Date().toISOString(), status: "submitted" });
+          setAttempt({
+            attemptId: storedAttemptId,
+            userId,
+            courseId,
+            startedAt: new Date().toISOString(),
+            status: "submitted",
+          });
         }
       } else if (storedAttemptId) {
-        setAttempt({ attemptId: storedAttemptId, userId, courseId, startedAt: new Date().toISOString(), status: "started" });
+        setAttempt({
+          attemptId: storedAttemptId,
+          userId,
+          courseId,
+          startedAt: new Date().toISOString(),
+          status: "started",
+        });
         setStatus(STATUS.IN_PROGRESS);
       }
     } catch (error) {
       console.debug("[diagnostic] init error", error);
     }
-  }, [storageKeys.attempt, storageKeys.level, storageKeys.score, userId, courseId]);
+  }, [
+    storageKeys.attempt,
+    storageKeys.level,
+    storageKeys.score,
+    userId,
+    courseId,
+  ]);
 
   function focusTest() {
-    if (testRef.current && typeof testRef.current.focusFirstQuestion === "function") {
+    if (
+      testRef.current &&
+      typeof testRef.current.focusFirstQuestion === "function"
+    ) {
       testRef.current.focusFirstQuestion();
     }
   }
 
-  async function ensureAttempt({ trackStart = false, trackInitiated = false, forceNew = false, focus = true } = {}) {
+  async function ensureAttempt({
+    trackStart = false,
+    trackInitiated = false,
+    forceNew = false,
+    focus = true,
+  } = {}) {
     if (!userId || !courseId) {
-      toast.error("Debes iniciar sesion para realizar el diagnostico.");
+      toast.error("Debes iniciar sesión para realizar el diagnostico.");
       return null;
     }
 
@@ -98,7 +141,11 @@ const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, 
     if (hasStarted && !forceNew) {
       setStatus(STATUS.IN_PROGRESS);
       if (trackInitiated) {
-        track("diagnostic_initiated", { userId, courseId, attemptId: attempt.attemptId });
+        track("diagnostic_initiated", {
+          userId,
+          courseId,
+          attemptId: attempt.attemptId,
+        });
       }
       if (focus) focusTest();
       return attempt;
@@ -117,10 +164,18 @@ const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, 
       setAnswersDraft(null);
       setStatus(STATUS.IN_PROGRESS);
       if (trackStart) {
-        track("diagnostic_start", { userId, courseId, attemptId: data.attemptId });
+        track("diagnostic_start", {
+          userId,
+          courseId,
+          attemptId: data.attemptId,
+        });
       }
       if (trackInitiated) {
-        track("diagnostic_initiated", { userId, courseId, attemptId: data.attemptId });
+        track("diagnostic_initiated", {
+          userId,
+          courseId,
+          attemptId: data.attemptId,
+        });
       }
       if (focus) focusTest();
       return data;
@@ -134,26 +189,46 @@ const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, 
 
   async function handlePrimaryClick() {
     const forceNew = status === STATUS.COMPLETED;
-    await ensureAttempt({ trackStart: true, focus: true, forceNew, trackInitiated: forceNew });
+    await ensureAttempt({
+      trackStart: true,
+      focus: true,
+      forceNew,
+      trackInitiated: forceNew,
+    });
   }
 
   async function handleSecondaryClick() {
     if (status === STATUS.SUBMITTING || status === STATUS.STARTING) return;
     if (status === STATUS.COMPLETED) {
-      const confirmRestart = window.confirm("Ya completaste el diagnostico. Deseas iniciar un nuevo intento?");
+      const confirmRestart = window.confirm(
+        "Ya completaste el diagnostico. Deseas iniciar un nuevo intento?"
+      );
       if (!confirmRestart) {
         handleViewRubric();
         return;
       }
-      await ensureAttempt({ trackStart: true, trackInitiated: true, forceNew: true, focus: true });
+      await ensureAttempt({
+        trackStart: true,
+        trackInitiated: true,
+        forceNew: true,
+        focus: true,
+      });
       return;
     }
     if (status === STATUS.IN_PROGRESS && attempt) {
-      track("diagnostic_initiated", { userId, courseId, attemptId: attempt.attemptId });
+      track("diagnostic_initiated", {
+        userId,
+        courseId,
+        attemptId: attempt.attemptId,
+      });
       focusTest();
       return;
     }
-    await ensureAttempt({ trackInitiated: true, trackStart: status === STATUS.IDLE, focus: true });
+    await ensureAttempt({
+      trackInitiated: true,
+      trackStart: status === STATUS.IDLE,
+      focus: true,
+    });
   }
 
   async function handleSubmitAnswers(answerArray, answerMap) {
@@ -167,8 +242,18 @@ const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, 
       setAttempt((prev) => (prev ? { ...prev, status: "submitted" } : null));
       localStorage.setItem(storageKeys.level, payload.level);
       localStorage.setItem(storageKeys.score, String(payload.score));
-      track("diagnostic_submitted", { userId, courseId, attemptId: payload.attemptId, score: payload.score, level: payload.level });
-      assistantPush({ tag: "Diagnostico", title: "Resultado disponible", desc: `Nivel ${payload.level} - Score ${payload.score}` });
+      track("diagnostic_submitted", {
+        userId,
+        courseId,
+        attemptId: payload.attemptId,
+        score: payload.score,
+        level: payload.level,
+      });
+      assistantPush({
+        tag: "Diagnostico",
+        title: "Resultado disponible",
+        desc: `Nivel ${payload.level} - Score ${payload.score}`,
+      });
     } catch (error) {
       console.debug("[diagnostic] submit error", error);
       toast.error("No se pudo enviar el diagnostico. Reintenta, por favor.");
@@ -208,13 +293,19 @@ const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, 
   }, [status]);
 
   const canPrimary = status !== STATUS.SUBMITTING && status !== STATUS.STARTING;
-  const canSecondary = status !== STATUS.SUBMITTING && status !== STATUS.STARTING;
+  const canSecondary =
+    status !== STATUS.SUBMITTING && status !== STATUS.STARTING;
 
-  const shouldRenderCard = status !== STATUS.IDLE || !!attempt || !!answersDraft || !!result;
+  const shouldRenderCard =
+    status !== STATUS.IDLE || !!attempt || !!answersDraft || !!result;
 
   const handleSaveRubric = () => {
     if (!result) return;
-    assistantPush({ tag: "Rubrica", title: `Nivel ${result.level}`, desc: result.score != null ? `Score ${result.score}` : "" });
+    assistantPush({
+      tag: "Rubrica",
+      title: `Nivel ${result.level}`,
+      desc: result.score != null ? `Score ${result.score}` : "",
+    });
   };
   useImperativeHandle(ref, () => ({
     startDiagnostic: handlePrimaryClick,
@@ -226,7 +317,10 @@ const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, 
   }
 
   return (
-    <article className="mt-8 border border-slate-200 rounded-xl p-5 bg-white shadow-sm flex flex-col gap-4" id="diagnostico-card">
+    <article
+      className="mt-8 border border-slate-200 rounded-xl p-5 bg-white shadow-sm flex flex-col gap-4"
+      id="diagnostico-card"
+    >
       <div className="flex items-center gap-2 flex-nowrap overflow-x-auto">
         <button
           type="button"
@@ -267,8 +361,12 @@ const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, 
 
       {status === STATUS.COMPLETED && result && (
         <div className="border border-emerald-200 bg-emerald-50 rounded-xl p-4 text-sm text-emerald-800">
-          <p className="font-semibold text-emerald-900">Diagnostico completado</p>
-          <p className="mt-1">Nivel {result.level} - Score {result.score}</p>
+          <p className="font-semibold text-emerald-900">
+            Diagnostico completado
+          </p>
+          <p className="mt-1">
+            Nivel {result.level} - Score {result.score}
+          </p>
           {result.recommendations && result.recommendations.length > 0 && (
             <ul className="mt-2 list-disc list-inside space-y-1">
               {result.recommendations.map((rec, index) => (
@@ -293,13 +391,3 @@ const DiagnosticCard = forwardRef(function DiagnosticCard({ userId, courseId }, 
 });
 
 export default DiagnosticCard;
-
-
-
-
-
-
-
-
-
-

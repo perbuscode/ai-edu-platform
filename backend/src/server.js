@@ -1,103 +1,172 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import { makeOpenAIClient, generateStudyPlan } from './openaiPlan.js';
-import { getFirestoreSafe, verifyIdTokenOptional } from './firebaseAdmin.js';
+// backend/src/server.js
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import { getCoursesData, getMetricsData, getSkillsMapData } from "./dashboardData.js";
+import { getFirestoreSafe, verifyIdTokenOptional } from "./firebaseAdmin.js";
+import { getAiProvider } from "./ai-providers/index.js";
 
 const app = express();
 const PORT = process.env.PORT || 5050;
 
-app.use(cors({ origin: true }));
-app.use(express.json({ limit: '1mb' }));
+// --- Sanitización básica de strings ---
+function toSafeString(v, { max = 200 } = {}) {
+  if (typeof v !== "string") return "";
+  // trim + recortar longitud + quitar caracteres de control no imprimibles
+  const trimmed = v.trim().slice(0, max);
+  return trimmed.replace(/[\u0000-\u001F\u007F]/g, "");
+}
 
-app.get('/health', (req, res) => {
+// Configuración de CORS más explícita y segura para producción
+const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000").split(",");
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// Cabeceras de seguridad básicas (ajusta según necesidades del frontend)
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+  next();
+});
+
+app.use(express.json({ limit: "1mb" }));
+
+app.get("/health", (req, res) => {
   res.json({ ok: true, uptime: process.uptime() });
 });
 
-app.post('/plan', async (req, res) => {
+app.get("/api/metrics", async (req, res) => {
+  try {
+    const metrics = await getMetricsData();
+    res.json(metrics);
+  } catch (error) {
+    console.error("[dashboard] metrics error", error);
+    res.status(500).json({ error: "No se pudieron obtener las métricas" });
+  }
+});
+
+app.get("/api/courses", async (req, res) => {
+  try {
+    const courses = await getCoursesData();
+    res.json(courses);
+  } catch (error) {
+    console.error("[dashboard] courses error", error);
+    res.status(500).json({ error: "No se pudieron obtener los cursos" });
+  }
+});
+
+app.get("/api/skills-map", async (req, res) => {
+  try {
+    const skills = await getSkillsMapData();
+    res.json(skills);
+  } catch (error) {
+    console.error("[dashboard] skills map error", error);
+    res.status(500).json({ error: "No se pudo obtener el mapa de habilidades" });
+  }
+});
+
+app.post("/plan", async (req, res) => {
   try {
     const { objective, level, hoursPerWeek, weeks } = req.body || {};
 
-    // Validación explícita del payload con mensajes claros
+    // Sanitizar strings (evita espacios de más y caracteres raros)
+    const objectiveSafe = toSafeString(objective, { max: 300 });
+    const levelSafe = toSafeString(level, { max: 100 });
+
+    // Validación explícita del payload
     const problems = [];
-    if (typeof objective !== 'string' || objective.trim() === '') problems.push('objective (string no vacío)');
-    if (typeof level !== 'string' || level.trim() === '') problems.push('level (string no vacío)');
+    if (!objectiveSafe) problems.push("objective (string no vacío)");
+    if (!levelSafe) problems.push("level (string no vacío)");
     const hpw = Number(hoursPerWeek);
-    if (!Number.isFinite(hpw) || hpw <= 0) problems.push('hoursPerWeek (número > 0)');
+    if (!Number.isFinite(hpw) || hpw <= 0) problems.push("hoursPerWeek (número > 0)");
     const wks = Number(weeks);
-    if (!Number.isFinite(wks) || wks <= 0 || !Number.isInteger(wks)) problems.push('weeks (entero > 0)');
+    if (!Number.isFinite(wks) || wks <= 0 || !Number.isInteger(wks))
+      problems.push("weeks (entero > 0)");
+
+    // (Opcional) límites sanos:
+    // if (hpw > 80) problems.push("hoursPerWeek (máx 80)");
+    // if (wks > 52) problems.push("weeks (máx 52)");
+
     if (problems.length) {
       const errorId = Date.now().toString(36);
-      console.warn(`[POST /plan][${errorId}] Validación fallida: ${problems.join(', ')}`);
-      return res.status(400).json({ error: `Payload inválido: ${problems.join('; ')}`, errorId });
+      console.warn(`[POST /plan][${errorId}] Validación fallida: ${problems.join(", ")}`);
+      return res.status(400).json({ error: `Payload inválido: ${problems.join("; ")}`, errorId });
     }
 
     let plan;
-    if (process.env.MOCK_PLAN === '1' || (req.query && req.query.mock === '1') || req.headers['mock'] === '1' || req.headers['x-mock'] === '1') {
-      if ((req.query && req.query.mock === '1') || req.headers['mock'] === '1' || req.headers['x-mock'] === '1') {
-        console.info('[POST /plan] mock solicitado (query/header)');
-      }
+    if (
+      process.env.MOCK_PLAN === "1" ||
+      (req.query && req.query.mock === "1") ||
+      req.headers["mock"] === "1" ||
+      req.headers["x-mock"] === "1"
+    ) {
+      console.info("[POST /plan] mock solicitado");
       plan = {
-        title: `${objective} (Nivel ${level}) - ${weeks} semanas`,
-        goal: objective,
-        level,
-        hoursPerWeek: Number(hoursPerWeek),
-        durationWeeks: Number(weeks),
+        title: `${objectiveSafe} (Nivel ${levelSafe}) - ${wks} semanas`,
+        goal: objectiveSafe,
+        level: levelSafe,
+        hoursPerWeek: hpw,
+        durationWeeks: wks,
         blocks: [
-          { title: 'Fundamentos', bullets: ['Intro', 'Herramientas', 'Buenas prácticas'], project: 'Proyecto 1', role: 'Jr.' },
-          { title: 'Profundización', bullets: ['Conceptos clave', 'Práctica guiada'], project: 'Proyecto 2', role: 'Mid' }
+          {
+            title: "Fundamentos",
+            bullets: ["Intro", "Herramientas", "Buenas prácticas"],
+            project: "Proyecto 1",
+            role: "Jr.",
+          },
+          {
+            title: "Profundización",
+            bullets: ["Conceptos clave", "Práctica guiada"],
+            project: "Proyecto 2",
+            role: "Mid",
+          },
         ],
         rubric: [
-          { criterion: 'Comprensión de conceptos', level: 'A/B/C' },
-          { criterion: 'Aplicación práctica', level: 'A/B/C' },
+          { criterion: "Comprensión de conceptos", level: "A/B/C" },
+          { criterion: "Aplicación práctica", level: "A/B/C" },
         ],
       };
     } else {
       try {
-        const client = makeOpenAIClient(process.env.OPENAI_API_KEY);
-        plan = await generateStudyPlan({ client, input: { objective, level, hoursPerWeek, weeks } });
-      } catch (err) {
-        // Fallback: si falla proveedor y MOCK_PLAN=1 en env, devolvemos mock (200)
-    if (process.env.MOCK_PLAN === '1' || !process.env.OPENAI_API_KEY) {
-          const errorId = Date.now().toString(36);
-          const httpStatus = (err && (err.status ?? err.statusCode ?? err.response?.status ?? err.response?.statusCode)) || undefined;
-          console.warn(`[POST /plan][${errorId}] OpenAI falló, devolviendo mock por MOCK_PLAN=1`, {
-            message: err?.message || String(err),
-            httpStatus,
-          });
-          plan = {
-            title: `${objective} (Nivel ${level}) - ${weeks} semanas`,
-            goal: objective,
-            level,
-            hoursPerWeek: Number(hoursPerWeek),
-            durationWeeks: Number(weeks),
-            blocks: [
-              { title: 'Fundamentos', bullets: ['Intro'], project: 'Proyecto mock', role: 'Jr.' }
-            ],
-            rubric: [
-              { criterion: 'Entendimiento', level: 'A/B/C' }
-            ],
-          };
-        } else {
-          throw err;
-        }
+        const { generateStudyPlan } = getAiProvider();
+        plan = await generateStudyPlan({
+          input: { objective: objectiveSafe, level: levelSafe, hoursPerWeek: hpw, weeks: wks },
+        });
+      } catch (error) {
+        const errorId = Date.now().toString(36);
+        console.error(`[POST /plan][${errorId}] Fallo al generar plan con el proveedor de IA`, {
+          message: error?.message || String(error),
+          httpStatus: error.status || error.statusCode,
+        });
+        throw error;
       }
     }
 
-    // Try to extract user via Firebase token
-    const authz = req.headers['authorization'];
+    // Intento de guardar el plan en Firestore si hay usuario autenticado
+    const authz = req.headers["authorization"];
     const decoded = await verifyIdTokenOptional(authz);
     if (decoded?.uid) {
       const db = getFirestoreSafe();
       if (db) {
         const uid = decoded.uid;
-        const ref = db.collection('users').doc(uid).collection('plans').doc();
+        const ref = db.collection("users").doc(uid).collection("plans").doc();
         const stored = {
           plan,
-          objective,
-          level,
-          hoursPerWeek: Number(hoursPerWeek),
-          weeks: Number(weeks),
+          objective: objectiveSafe,
+          level: levelSafe,
+          hoursPerWeek: hpw,
+          weeks: wks,
           createdAt: new Date().toISOString(),
         };
         await ref.set(stored);
@@ -108,24 +177,41 @@ app.post('/plan', async (req, res) => {
     res.json({ plan });
   } catch (e) {
     const errorId = Date.now().toString(36);
-    const httpStatus = (e && (e.status ?? e.statusCode ?? e.response?.status ?? e.response?.statusCode)) || undefined;
-    const name = e?.name || 'Error';
-    const message = e?.message || String(e);
-    const stack = e?.stack;
+    const httpStatus =
+      e?.status ?? e?.statusCode ?? e?.response?.status ?? e?.response?.statusCode ?? 500;
+
+    // Log en servidor
     console.error(`[POST /plan][${errorId}] Error al generar plan`, {
-      name,
-      message,
+      name: e?.name || "Error",
+      message: e?.message || String(e),
       httpStatus,
-      stack,
+      details: e?.details || e?.response?.data,
+      stack: e?.stack,
     });
-    res.status(500).json({ error: 'No se pudo generar el plan', errorId });
+
+    // Respuesta base al cliente
+    const payload = { error: "No se pudo generar el plan", errorId };
+
+    // En desarrollo, expone info útil
+    if (process.env.NODE_ENV !== "production") {
+      payload.debug = {
+        provider: process.env.AI_PROVIDER,
+        model: process.env.GEMINI_MODEL,
+        status: httpStatus,
+        name: e?.name,
+        message: e?.message,
+        details: e?.details || e?.response?.data || null,
+      };
+    }
+
+    res.status(httpStatus).json(payload);
   }
 });
 
 // Export app for testing
 export default app;
 
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
     console.log(`[backend] Escuchando en http://localhost:${PORT}`);
   });

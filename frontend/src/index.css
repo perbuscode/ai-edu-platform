@@ -2,8 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-sans: Inter, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
+html,
+body {
+  font-family: var(--font-sans);
+}
+
 /* Reset/opcional para fuentes y color base del body */
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
@@ -14,10 +26,18 @@ html {
 
 /* Aparición suave para menús desplegables */
 @keyframes dropdownIn {
-  from { opacity: 0; transform: translateY(4px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
-.dropdown-appear { animation: dropdownIn .2s ease-out both; }
+.dropdown-appear {
+  animation: dropdownIn 0.2s ease-out both;
+}
 
 body {
   @apply bg-slate-900 text-slate-100 antialiased;
@@ -27,48 +47,103 @@ body {
 /* Se mantiene scrollbar-gutter estable en html para evitar saltos */
 
 /* Contenedores y títulos por defecto (opcional) */
-h1, h2, h3, h4, h5 {
+h1,
+h2,
+h3,
+h4,
+h5 {
   /* En tema oscuro, títulos claros por defecto */
   @apply text-slate-100;
 }
 
 /* Dashboard prototype helpers (ported to React) */
-:root { color-scheme: light dark; }
-.gradient-bg { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); }
-.card-hover { transition: transform .25s ease, box-shadow .25s ease; }
-.card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0/0.1), 0 10px 10px -5px rgb(0 0 0/0.04); }
-.bar-green { background: linear-gradient(90deg,#4ade80 0%,#22c55e 100%); }
-.chip { border: 1px solid rgb(229 231 235); }
-.step-dot { width: 24px; height: 24px; }
+:root {
+  color-scheme: light dark;
+}
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.card-hover {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0/0.1),
+    0 10px 10px -5px rgb(0 0 0/0.04);
+}
+.bar-green {
+  background: linear-gradient(90deg, #4ade80 0%, #22c55e 100%);
+}
+.chip {
+  border: 1px solid rgb(229 231 235);
+}
+.step-dot {
+  width: 24px;
+  height: 24px;
+}
 
 /* Floating assistant: soft appear animation */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
-.assistant-appear { animation: fadeInUp .28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.assistant-appear {
+  animation: fadeInUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
 
 /* En mobile, reserva espacio para el rail colapsado (3rem) */
-.with-sidebar-collapsed { margin-left: 3rem; }  /* w-12 */
+.with-sidebar-collapsed {
+  margin-left: 3rem;
+} /* w-12 */
 /* Sidebar expandido también desplaza el contenido en mobile */
-.with-sidebar-expanded { margin-left: 16rem; } /* w-64 */
+.with-sidebar-expanded {
+  margin-left: 16rem;
+} /* w-64 */
 /* Transición del contenedor para animar en mobile y desktop */
-#app { transition: margin-left .2s ease; }
+#app {
+  transition: margin-left 0.2s ease;
+}
 
 /* Animación de ancho del sidebar (cuando colapsa/expande) */
-#sidebar { transition: width .2s ease, transform .2s ease; }
-#sidebar.collapsed { width: 3rem; }
-#sidebar.expanded { width: 16rem; }
+#sidebar {
+  transition:
+    width 0.2s ease,
+    transform 0.2s ease;
+}
+#sidebar.collapsed {
+  width: 3rem;
+}
+#sidebar.expanded {
+  width: 16rem;
+}
 
 /* Tutor IA (derecha): reservar espacio para que no se superponga sobre el contenido */
-body.assistant-rail-active { margin-right: var(--assistant-rail-width, 3.5rem); transition: margin-right .5s cubic-bezier(0.22, 1, 0.36, 1); }
-body.assistant-rail-collapsed { --assistant-rail-width: 3.5rem; } /* w-14 (56px) */
-body.assistant-rail-expanded { --assistant-rail-width: 11.25rem; } /* 180px */
+body.assistant-rail-active {
+  margin-right: var(--assistant-rail-width, 3.5rem);
+  transition: margin-right 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+body.assistant-rail-collapsed {
+  --assistant-rail-width: 3.5rem;
+} /* w-14 (56px) */
+body.assistant-rail-expanded {
+  --assistant-rail-width: 11.25rem;
+} /* 180px */
 
 /* Placeholder fixes: avoid dark shaded background on hints */
 @layer base {
   /* Active nav helper for sidebar anchors */
-  .nav-active { background-color: rgba(255,255,255,0.08); }
+  .nav-active {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
 
   /* Modern */
   input::placeholder,
@@ -89,11 +164,13 @@ body.assistant-rail-expanded { --assistant-rail-width: 11.25rem; } /* 180px */
 }
 
 /* CTA button: simple static border, no animation */
-.btn-glow { position: relative; }
-.btn-glow-border { display: none !important; }
+.btn-glow {
+  position: relative;
+}
+.btn-glow-border {
+  display: none !important;
+}
 
 /* Botón con borde animado tipo haz de luz (robusto y sin máscaras) */
 /* removed animated border styles */
 /* Botón con borde animado (estilo ejemplo con ::before) */
-
-

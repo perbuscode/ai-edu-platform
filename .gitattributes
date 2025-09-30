@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+# Ensure UTF-8 without BOM for source files
+*.{js,jsx,ts,tsx,cjs,mjs,json,yml,yaml,css,scss,html,md,mdx,sh,bash,py,ps1,psm1,psd1,env,env.example,gitignore,editorconfig,lock,config,jsx} text working-tree-encoding=UTF-8
+
+# Treat data and documentation as UTF-8 text
+*.{txt,csv,md,markdown} text working-tree-encoding=UTF-8
+
+# Binary assets
+*.{png,jpg,jpeg,gif,ico,webp,bmp,svg} binary

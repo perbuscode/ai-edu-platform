@@ -29,19 +29,24 @@ export default function ClassroomStepper({
   }
 
   return (
-    <div className={`w-full ${className}`} role="navigation" aria-label="Progreso de la clase">
+    <div
+      className={`w-full ${className}`}
+      role="navigation"
+      aria-label="Progreso de la clase"
+    >
       <div className="flex items-center gap-3 select-none" aria-hidden>
         {items.map((step, idx) => {
           const i = idx + 1;
           const st = statusOf(i);
           const isCurrent = st === "current";
           const isDone = st === "done";
-          const baseClasses = "w-7 h-7 rounded-full grid place-items-center text-xs font-semibold transition-colors";
+          const baseClasses =
+            "w-7 h-7 rounded-full grid place-items-center text-xs font-semibold transition-colors";
           const colorClasses = isCurrent
             ? "bg-blue-600 text-white"
             : isDone
-            ? "bg-green-600 text-white"
-            : "bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-300";
+              ? "bg-green-600 text-white"
+              : "bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-300";
           return (
             <React.Fragment key={step.id || step.label || i}>
               <button
@@ -66,4 +71,3 @@ export default function ClassroomStepper({
     </div>
   );
 }
-

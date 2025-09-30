@@ -5,6 +5,7 @@ Plataforma educativa basada en inteligencia artificial que permite a cualquier u
 ---
 
 ## 🧩 1. Propuesta de valor
+
 - Cursos generados 100% por IA, según el nivel y necesidad del usuario
 - Aula virtual dinámica: lecciones, tareas, evaluaciones, proyecto final
 - Tutor virtual IA que motiva, orienta y da seguimiento real
@@ -14,6 +15,7 @@ Plataforma educativa basada en inteligencia artificial que permite a cualquier u
 ---
 
 ## 🧍‍♂️ 2. Segmento de clientes
+
 - Personas autodidactas
 - Profesionales que buscan mejorar habilidades específicas
 - Emprendedores que necesitan formación puntual
@@ -23,6 +25,7 @@ Plataforma educativa basada en inteligencia artificial que permite a cualquier u
 ---
 
 ## 📡 3. Canales
+
 - Página web de la plataforma
 - Campañas en redes sociales (TikTok, YouTube, Instagram)
 - Colaboraciones con influencers educativos y canales EdTech
@@ -31,6 +34,7 @@ Plataforma educativa basada en inteligencia artificial que permite a cualquier u
 ---
 
 ## ❤️ 4. Relación con los clientes
+
 - Experiencia completamente personalizada con IA
 - Seguimiento automatizado del progreso
 - Tutor IA con rostro, voz y personalidad seleccionable
@@ -39,6 +43,7 @@ Plataforma educativa basada en inteligencia artificial que permite a cualquier u
 ---
 
 ## 💰 5. Fuentes de ingreso
+
 - Suscripción mensual por acceso ilimitado a cursos generados
 - Pago por curso único
 - Licencias B2B para empresas (modelo SaaS)
@@ -47,6 +52,7 @@ Plataforma educativa basada en inteligencia artificial que permite a cualquier u
 ---
 
 ## 🔧 6. Recursos clave
+
 - Infraestructura tecnológica (IA generativa, APIs de video)
 - Algoritmos personalizados de generación educativa
 - Diseño UI/UX del aula virtual
@@ -55,6 +61,7 @@ Plataforma educativa basada en inteligencia artificial que permite a cualquier u
 ---
 
 ## 🔗 7. Actividades clave
+
 - Desarrollo del orquestador de IA
 - Generación de contenido educativo dinámico
 - Mejora continua del modelo de tutor virtual
@@ -64,6 +71,7 @@ Plataforma educativa basada en inteligencia artificial que permite a cualquier u
 ---
 
 ## 🤝 8. Socios clave
+
 - Proveedores de IA generativa (OpenAI, Claude, etc.)
 - Plataformas de video IA (HeyGen, Synthesia, etc.)
 - Plataformas de hosting y despliegue (Netlify, Vercel)
@@ -72,6 +80,7 @@ Plataforma educativa basada en inteligencia artificial que permite a cualquier u
 ---
 
 ## 💸 9. Estructura de costos
+
 - Costos de APIs (GPT-4, generación de video, hosting)
 - Infraestructura (servidores, almacenamiento)
 - Desarrollo y mantenimiento del software

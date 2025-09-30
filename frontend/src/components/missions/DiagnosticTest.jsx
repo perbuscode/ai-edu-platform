@@ -1,10 +1,17 @@
 // src/components/missions/DiagnosticTest.jsx
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 const QUESTIONS = [
   {
     id: "q1",
-    prompt: "¿Qué métrica usarías para comparar ventas acumuladas entre años?",
+    prompt: "Â¿QuÃ© mÃ©trica usarÃ­as para comparar ventas acumuladas entre aÃ±os?",
     options: [
       { value: "sum", label: "SUM en la tabla de ventas" },
       { value: "ytd", label: "TOTALYTD con CALCULATE" },
@@ -13,25 +20,27 @@ const QUESTIONS = [
   },
   {
     id: "q2",
-    prompt: "Para limpiar datos duplicados en Power Query, ¿qué paso aplicarías?",
+    prompt:
+      "Para limpiar datos duplicados en Power Query, Â¿quÃ© paso aplicarÃ­as?",
     options: [
       { value: "merge", label: "Combinar consultas" },
       { value: "remove", label: "Eliminar duplicados por columnas clave" },
-      { value: "group", label: "Agrupar por categoría" },
+      { value: "group", label: "Agrupar por categorÃ­a" },
     ],
   },
   {
     id: "q3",
-    prompt: "¿Qué visual ayuda a explicar una tendencia con contexto narrativo?",
+    prompt:
+      "Â¿QuÃ© visual ayuda a explicar una tendencia con contexto narrativo?",
     options: [
-      { value: "line", label: "Gráfico de líneas con anotaciones" },
+      { value: "line", label: "GrÃ¡fico de lÃ­neas con anotaciones" },
       { value: "table", label: "Tabla con totales" },
-      { value: "gauge", label: "Indicador de velocímetro" },
+      { value: "gauge", label: "Indicador de velocÃ­metro" },
     ],
   },
   {
     id: "q4",
-    prompt: "Para filtrar por rol sin afectar todo el modelo, usarías…",
+    prompt: "Para filtrar por rol sin afectar todo el modelo, Â¿quÃ© usarÃ­as?",
     options: [
       { value: "rls", label: "Roles de Row Level Security" },
       { value: "bookmark", label: "Bookmarks" },
@@ -40,7 +49,7 @@ const QUESTIONS = [
   },
   {
     id: "q5",
-    prompt: "¿Qué paso seguirías después de presentar los hallazgos?",
+    prompt: "Â¿QuÃ© paso seguirÃ­as despuÃ©s de presentar los hallazgos?",
     options: [
       { value: "share", label: "Compartir dashboard y programar refrescos" },
       { value: "close", label: "Cerrar el informe sin compartir" },
@@ -50,8 +59,14 @@ const QUESTIONS = [
 ];
 
 const DiagnosticTest = forwardRef(function DiagnosticTest(
-  { attemptId, onSubmit, submitting = false, initialAnswers = {}, onAnswersChange },
-  ref,
+  {
+    attemptId,
+    onSubmit,
+    submitting = false,
+    initialAnswers = {},
+    onAnswersChange,
+  },
+  ref
 ) {
   const formRef = useRef(null);
   const [answers, setAnswers] = useState(() => ({ ...initialAnswers }));
@@ -70,12 +85,15 @@ const DiagnosticTest = forwardRef(function DiagnosticTest(
     },
   }));
 
-  const answeredCount = useMemo(() => Object.values(answers).filter(Boolean).length, [answers]);
+  const answeredCount = useMemo(
+    () => Object.values(answers).filter(Boolean).length,
+    [answers]
+  );
 
   function handleChange(questionId, value) {
     setAnswers((prev) => {
       const next = { ...prev, [questionId]: value };
-      if (typeof onAnswersChange === 'function') {
+      if (typeof onAnswersChange === "function") {
         onAnswersChange(next);
       }
       return next;
@@ -86,25 +104,42 @@ const DiagnosticTest = forwardRef(function DiagnosticTest(
     event.preventDefault();
     if (submitting) return;
     if (answeredCount < QUESTIONS.length) {
-      setError('Responde todas las preguntas antes de enviar.');
+      setError("Responde todas las preguntas antes de enviar.");
       return;
     }
     setError(null);
-    const payload = QUESTIONS.map((q) => ({ questionId: q.id, answer: answers[q.id] }));
+    const payload = QUESTIONS.map((q) => ({
+      questionId: q.id,
+      answer: answers[q.id],
+    }));
     onSubmit?.(payload, answers);
   }
 
   return (
-    <form ref={formRef} className="mt-4 space-y-4" onSubmit={handleSubmit} aria-label="Diagnóstico sugerido">
+    <form
+      ref={formRef}
+      className="mt-4 space-y-4"
+      onSubmit={handleSubmit}
+      aria-label="DiagnÃ³stico sugerido"
+    >
       <input type="hidden" name="attemptId" value={attemptId} />
       {QUESTIONS.map((question, idx) => (
-        <fieldset key={question.id} className="border border-slate-200 rounded-xl p-4">
-          <legend className="font-medium text-slate-900">{idx + 1}. {question.prompt}</legend>
+        <fieldset
+          key={question.id}
+          className="border border-slate-200 rounded-xl p-4"
+        >
+          <legend className="font-medium text-slate-900">
+            {idx + 1}. {question.prompt}
+          </legend>
           <div className="mt-3 space-y-2">
             {question.options.map((option) => {
               const inputId = `${question.id}-${option.value}`;
               return (
-                <label key={option.value} htmlFor={inputId} className="flex items-start gap-2 text-sm text-slate-700 cursor-pointer">
+                <label
+                  key={option.value}
+                  htmlFor={inputId}
+                  className="flex items-start gap-2 text-sm text-slate-700 cursor-pointer"
+                >
                   <input
                     id={inputId}
                     type="radio"
@@ -123,16 +158,22 @@ const DiagnosticTest = forwardRef(function DiagnosticTest(
         </fieldset>
       ))}
 
-      {error && <p className="text-sm text-rose-600" role="alert">{error}</p>}
+      {error && (
+        <p className="text-sm text-rose-600" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <p className="text-sm text-slate-600">Preguntas respondidas: {answeredCount} / {QUESTIONS.length}</p>
+        <p className="text-sm text-slate-600">
+          Preguntas respondidas: {answeredCount} / {QUESTIONS.length}
+        </p>
         <button
           type="submit"
           className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-sky-600 text-white text-sm font-medium shadow hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-70"
           disabled={submitting}
         >
-          {submitting ? 'Enviando…' : 'Enviar diagnóstico'}
+          {submitting ? "Enviando..." : "Enviar diagnÃ³stico"}
         </button>
       </div>
     </form>

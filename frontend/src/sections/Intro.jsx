@@ -9,7 +9,7 @@ export default function Intro({ observe }) {
     if (!u) return "Estudiante";
     if (u.displayName && u.displayName.trim()) return u.displayName.trim();
     if (u.email) {
-      const local = u.email.split('@')[0] || '';
+      const local = u.email.split("@")[0] || "";
       return local.charAt(0).toUpperCase() + local.slice(1);
     }
     return "Estudiante";
@@ -18,17 +18,30 @@ export default function Intro({ observe }) {
   const ref = useRef(null);
   useEffect(() => (observe ? observe(ref.current) : undefined), [observe]);
   return (
-    <section id="intro" ref={ref} className="relative scroll-mt-20 bg-white/5 border border-white/10 rounded-xl p-6">
+    <section
+      id="intro"
+      ref={ref}
+      className="relative scroll-mt-20 bg-white/5 border border-white/10 rounded-xl p-6"
+    >
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold">Hola, {displayName} 👋</h2>
-          <p className="text-slate-300 mt-1">Este es tu salón de clases. Aquí encuentras tu plan, tu avance y tus oportunidades.</p>
+          <h2 className="text-xl md:text-2xl font-bold">
+            Hola, {displayName} 👋
+          </h2>
+          <p className="text-slate-300 mt-1">
+            Este es tu salón de clases. Aquí encuentras tu plan, tu avance y tus
+            oportunidades.
+          </p>
         </div>
         {/* Botón de navegación eliminado por redundante */}
       </div>
 
       {/* Asistente alineado a la parte superior del saludo, un poco a la izquierda */}
-      <FloatingAssistant placement="top-right" strategy="absolute" offsetClass="top-6 right-6" />
+      <FloatingAssistant
+        placement="top-right"
+        strategy="absolute"
+        offsetClass="top-6 right-6"
+      />
     </section>
   );
 }

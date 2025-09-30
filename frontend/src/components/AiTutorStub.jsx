@@ -55,15 +55,21 @@ export default function AiTutorStub({ lessonId = "unknown", className = "" }) {
     try {
       const ev = new CustomEvent("open-ai-tutor", { detail: { lessonId } });
       window.dispatchEvent(ev);
-    } catch {}
+    } catch (_error) {
+      // noop
+    }
   }
 
   return (
-    <div className={`bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl ${className}`}>
+    <div
+      className={`bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl ${className}`}
+    >
       <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between">
         <div>
           <h4 className="font-semibold text-sm">Tutor IA (stub)</h4>
-          <p className="text-xs text-gray-500 dark:text-slate-400">Lección: {lessonId}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-400">
+            Lección: {lessonId}
+          </p>
         </div>
         <button
           onClick={openFullChat}
@@ -128,4 +134,3 @@ export default function AiTutorStub({ lessonId = "unknown", className = "" }) {
     </div>
   );
 }
-

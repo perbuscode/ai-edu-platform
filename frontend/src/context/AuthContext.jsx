@@ -1,5 +1,11 @@
-﻿// src/context/AuthContext.jsx
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+// src/context/AuthContext.jsx
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import "../firebase";
 import {
   getAuth,
@@ -34,6 +40,25 @@ function mapAuthError(error) {
   return map[code] || "Ocurrió un error. Intenta nuevamente.";
 }
 
+/**
+ * Envuelve una operación de autenticación para manejar el estado de error y el logging.
+ * @param {() => Promise<any>} asyncFn La función asíncrona a ejecutar.
+ * @param {string} debugKey Una clave para identificar la operación en los logs.
+ */
+async function authOperation(asyncFn, debugKey, setError) {
+  setError(null);
+  try {
+    const result = await asyncFn();
+    console.debug(`[Auth] ${debugKey} OK`, result?.user?.uid || result);
+    return result;
+  } catch (e) {
+    const msg = mapAuthError(e);
+    setError(msg);
+    console.debug(`[Auth] ${debugKey} ERROR`, e?.code || e, msg);
+    throw new Error(msg);
+  }
+}
+
 export function AuthProvider({ children }) {
   const auth = useMemo(() => getAuth(), []);
   const [user, setUser] = useState(null);
@@ -50,7 +75,10 @@ export function AuthProvider({ children }) {
       console.debug("[Auth] setPersistence fallo", e?.code || e);
     });
     const unsub = onAuthStateChanged(auth, (fbUser) => {
-      console.debug("[Auth] onAuthStateChanged →", fbUser ? { uid: fbUser.uid, email: fbUser.email } : null);
+      console.debug(
+        "[Auth] onAuthStateChanged →",
+        fbUser ? { uid: fbUser.uid, email: fbUser.email } : null
+      );
       setUser(fbUser);
       setLoading(false);
     });
@@ -58,77 +86,56 @@ export function AuthProvider({ children }) {
   }, [auth]);
 
   async function register({ name, email, password, photoURL }) {
-    setError(null);
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      if (name || photoURL) {
-        await updateProfile(cred.user, { displayName: name || "", photoURL: photoURL || null });
-      }
-      console.debug("[Auth] register OK", cred.user?.uid);
-      return cred.user;
-    } catch (e) {
-      const msg = mapAuthError(e);
-      setError(msg);
-      console.debug("[Auth] register ERROR", e?.code || e, msg);
-      throw new Error(msg);
-    }
+    return authOperation(
+      async () => {
+        const cred = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        if (name || photoURL) {
+          await updateProfile(cred.user, {
+            displayName: name || "",
+            photoURL: photoURL || null,
+          });
+        }
+        return cred.user;
+      },
+      "register",
+      setError
+    );
   }
 
   async function login({ email, password }) {
-    setError(null);
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      console.debug("[Auth] login OK", cred.user?.uid);
-      return cred.user;
-    } catch (e) {
-      const msg = mapAuthError(e);
-      setError(msg);
-      console.debug("[Auth] login ERROR", e?.code || e, msg);
-      throw new Error(msg);
-    }
+    return authOperation(
+      () => signInWithEmailAndPassword(auth, email, password),
+      "login",
+      setError
+    );
   }
 
   async function loginWithGoogle() {
-    setError(null);
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      const cred = await signInWithPopup(auth, provider);
-      console.debug("[Auth] loginWithGoogle OK", cred.user?.uid);
-      return cred.user;
-    } catch (e) {
-      const msg = mapAuthError(e);
-      setError(msg);
-      console.debug("[Auth] loginWithGoogle ERROR", e?.code || e, msg);
-      throw new Error(msg);
-    }
+    return authOperation(
+      async () => {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
+        return await signInWithPopup(auth, provider);
+      },
+      "loginWithGoogle",
+      setError
+    );
   }
 
   async function resetPassword(email) {
-    setError(null);
-    try {
-      await sendPasswordResetEmail(auth, email);
-      console.debug("[Auth] resetPassword OK", email);
-      return true;
-    } catch (e) {
-      const msg = mapAuthError(e);
-      setError(msg);
-      console.debug("[Auth] resetPassword ERROR", e?.code || e, msg);
-      throw new Error(msg);
-    }
+    return authOperation(
+      () => sendPasswordResetEmail(auth, email),
+      "resetPassword",
+      setError
+    );
   }
 
   async function logout() {
-    setError(null);
-    try {
-      await signOut(auth);
-      console.debug("[Auth] logout OK");
-    } catch (e) {
-      const msg = mapAuthError(e);
-      setError(msg);
-      console.debug("[Auth] logout ERROR", e?.code || e, msg);
-      throw new Error(msg);
-    }
+    return authOperation(() => signOut(auth), "logout", setError);
   }
 
   async function updateUserProfile(fields) {
@@ -137,7 +144,11 @@ export function AuthProvider({ children }) {
       const u = auth.currentUser;
       if (!u) throw new Error("No hay usuario autenticado");
       await updateProfile(u, fields);
-      try { await u.reload(); } catch {}
+      try {
+        await u.reload();
+      } catch (_error) {
+        // noop
+      }
       setUser(cloneUser(auth.currentUser));
       console.debug("[Auth] updateUserProfile OK", Object.keys(fields));
       return auth.currentUser;
@@ -149,7 +160,17 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const value = { user, loading, error, register, login, loginWithGoogle, resetPassword, logout, updateUserProfile };
+  const value = {
+    user,
+    loading,
+    error,
+    register,
+    login,
+    loginWithGoogle,
+    resetPassword,
+    logout,
+    updateUserProfile,
+  };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

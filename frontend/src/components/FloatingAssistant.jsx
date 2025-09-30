@@ -9,11 +9,20 @@ export default function FloatingAssistant() {
   useEffect(() => {
     try {
       window.openFloatingAssistant = () => {
-        try { window.Assistant?.open?.(); } catch {}
+        try {
+          window.Assistant?.open?.();
+        } catch (_error) {
+          // noop
+        }
       };
-    } catch {}
-    try { console.debug("[Assistant] FloatingAssistant hidden; sidebar active."); } catch {}
+    } catch (_error) {
+      // noop
+    }
+    try {
+      console.debug("[Assistant] FloatingAssistant hidden; sidebar active.");
+    } catch (_error) {
+      // noop
+    }
   }, []);
   return null;
 }
-

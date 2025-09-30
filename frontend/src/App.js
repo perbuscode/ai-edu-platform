@@ -1,172 +1,85 @@
 // src/App.js
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import ValueSection from "./components/ValueSection";
-import Courses from "./components/Courses";
-import Testimonials from "./components/Testimonials";
-import ChatPlanner from "./components/ChatPlanner";
-import Footer from "./components/Footer";
-// FAQ flotante removido; usamos menu en Navbar
-import PlanExampleModal from "./components/PlanExampleModal";
-import ProtectedRoute from "./routes/ProtectedRoute";
-import Dashboard from "./pages/Dashboard";
-import Certificates from "./pages/Certificates";
-import PortfolioProjects from "./pages/PortfolioProjects";
-import MissionDetail from "./pages/MissionDetail";
-import VirtualRoom from "./pages/VirtualRoom";
-import Course from "./pages/Course";
-import Profile from "./pages/Profile";
-import CV from "./pages/CV";
-import PracticeInterview from "./pages/PracticeInterview";
-import Faqs from "./pages/Faqs";
-import Pqr from "./pages/Pqr";
-import Contacto from "./pages/Contacto";
-import BlogSection from "./components/BlogSection";
-import BlogPostModal from "./components/BlogPostModal";
-import AssistantSidebar from "./components/AssistantSidebar";
+import { useScrollToHash } from "./hooks/useScrollToHash";
 
-function Landing() {
-  const [openExample, setOpenExample] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState(null);
-  const [openBlog, setOpenBlog] = useState(false);
-  const [currentPost, setCurrentPost] = useState(null);
+// Layouts
+import MainLayout from "./pages/MainLayout";
+import ProtectedLayout from "./routes/ProtectedLayout";
 
-  useEffect(() => {
-    const onOpenExample = () => { setCurrentPlan(null); setOpenExample(true); };
-    const onOpenPlan = (ev) => { try { setCurrentPlan(ev?.detail?.plan || null); } catch {} setOpenExample(true); };
-    window.addEventListener("open-example-plan", onOpenExample);
-    window.addEventListener("open-plan-modal", onOpenPlan);
-    return () => {
-      window.removeEventListener("open-example-plan", onOpenExample);
-      window.removeEventListener("open-plan-modal", onOpenPlan);
-    };
-  }, []);
+// Pages
+import TermsAndConditions from "./pages/TermsAndConditions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Landing from "./pages/Landing";
+import NotFound from "./pages/NotFound";
 
-  return (
-    <>
-      <main>
-        <Hero onOpenExample={() => setOpenExample(true)} />
-        <ValueSection />
-        <Courses />
-        <Testimonials />
-        <ChatPlanner />
-        <BlogSection onOpenPost={(post)=>{ setCurrentPost(post); setOpenBlog(true); }} />
-      </main>
-      <Footer onOpenExample={() => setOpenExample(true)} />
-      <PlanExampleModal open={openExample} onClose={() => setOpenExample(false)} plan={currentPlan} />
-      <BlogPostModal open={openBlog} onClose={()=> setOpenBlog(false)} post={currentPost} />
-    </>
-  );
-}
+const Plan = lazy(() => import("./pages/Plan"));
+
+const Dashboard = lazy(
+  () => import(/* webpackPrefetch: true */ "./pages/Dashboard")
+);
+const PortfolioProjects = lazy(
+  () => import(/* webpackPrefetch: true */ "./pages/PortfolioProjects")
+);
+const Certificates = lazy(() => import("./pages/Certificates"));
+const MissionDetail = lazy(() => import("./pages/MissionDetail"));
+const VirtualRoom = lazy(() => import("./pages/VirtualRoom"));
+const Course = lazy(() => import("./pages/Course"));
+const Profile = lazy(() => import("./pages/Profile"));
+const CV = lazy(() => import("./pages/CV"));
+const PracticeInterview = lazy(() => import("./pages/PracticeInterview"));
+const Faqs = lazy(() => import("./pages/Faqs"));
+const Pqr = lazy(() => import("./pages/Pqr"));
+const Contacto = lazy(() => import("./pages/Contacto"));
 
 export default function App() {
   const location = useLocation();
-  // Scroll a secciones del landing cuando la URL trae hash (ej: "/#plan")
-  useEffect(() => {
-    if (!location.hash) return;
-    const id = location.hash.slice(1);
-    const scroll = () => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-      catch { el.scrollIntoView(); }
-    };
-    // Ejecuta varias veces para cubrir montaje de Landing
-    const t0 = setTimeout(scroll, 0);
-    const t1 = setTimeout(scroll, 120);
-    const t2 = setTimeout(scroll, 300);
-    return () => { clearTimeout(t0); clearTimeout(t1); clearTimeout(t2); };
-  }, [location.pathname, location.hash]);
-  const hideNavbar = (
-    location.pathname.startsWith("/dashboard") ||
-    location.pathname.startsWith("/profile") ||
-    location.pathname.startsWith("/course") ||
-    location.pathname.startsWith("/cv") ||
-    location.pathname.startsWith("/practice")
-  );
-  const assistantPaths = ["/dashboard", "/course", "/missions", "/cv", "/practice-interview"];
-  const showAssistantSidebar = assistantPaths.some((path) => location.pathname.startsWith(path));
+  useScrollToHash([location.pathname, location.hash]);
 
   return (
     <div className="bg-slate-900 min-h-screen">
-      {!hideNavbar && <Navbar />}
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/faqs" element={<Faqs />} />
-        <Route path="/pqr" element={<Pqr />} />
-        <Route path="/contacto" element={<Contacto />} />
-        <Route path="/missions/:missionId" element={<MissionDetail />} />
-        { /* Blog ahora es secciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n en landing; se elimina ruta dedicada */ }
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/portafolio"
-          element={
-            <ProtectedRoute>
-              <PortfolioProjects />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/certificaciones"
-          element={
-            <ProtectedRoute>
-              <Certificates />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/salon-virtual"
-          element={
-            <ProtectedRoute>
-              <VirtualRoom />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/course"
-          element={
-            <ProtectedRoute>
-              <Course />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cv"
-          element={
-            <ProtectedRoute>
-              <CV />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/practice-interview"
-          element={
-            <ProtectedRoute>
-              <PracticeInterview />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-      {/* Tutor IA visible solo en dashboard */}
-      {showAssistantSidebar && <AssistantSidebar />}
+      <Suspense
+        fallback={<div className="p-6 text-slate-400">Cargando...</div>}
+      >
+        <Routes>
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Landing />} />
+            <Route path="/faqs" element={<Faqs />} />
+            <Route path="/pqr" element={<Pqr />} />
+            <Route path="/contacto" element={<Contacto />} />
+            <Route path="/plan" element={<Plan />} />
+          </Route>
+
+          {/* Rutas Públicas Estáticas */}
+          <Route>
+            <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+          </Route>
+
+          {/* Rutas Protegidas */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route
+              path="/dashboard/portafolio"
+              element={<PortfolioProjects />}
+            />
+            <Route
+              path="/dashboard/certificaciones"
+              element={<Certificates />}
+            />
+            <Route path="/dashboard/salon-virtual" element={<VirtualRoom />} />
+            <Route path="/course" element={<Course />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/cv" element={<CV />} />
+            <Route path="/practice-interview" element={<PracticeInterview />} />
+            <Route path="/missions/:missionId" element={<MissionDetail />} />
+          </Route>
+
+          {/* Ruta para páginas no encontradas (404) */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </div>
   );
 }

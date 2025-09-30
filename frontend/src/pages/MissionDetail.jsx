@@ -22,7 +22,10 @@ export default function MissionDetail() {
       <div className="min-h-screen bg-slate-100 text-slate-900 flex items-center justify-center px-4">
         <div className="max-w-md text-center space-y-4">
           <h1 className="text-2xl font-semibold">Mision no encontrada</h1>
-          <p className="text-sm text-slate-600">No encontramos la mision que intentas abrir. Regresa al mapa de competencias para elegir otra actividad.</p>
+          <p className="text-sm text-slate-600">
+            No encontramos la mision que intentas abrir. Regresa al mapa de
+            competencias para elegir otra actividad.
+          </p>
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -55,32 +58,62 @@ export default function MissionDetail() {
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-lg">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-slate-400">Micro-proyecto</p>
-                <h1 className="text-2xl font-semibold text-slate-900">{mission.title}</h1>
-                <p className="mt-2 text-sm text-slate-600">{mission.description}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-400">
+                  Micro-proyecto
+                </p>
+                <h1 className="text-2xl font-semibold text-slate-900">
+                  {mission.title}
+                </h1>
+                <p className="mt-2 text-sm text-slate-600">
+                  {mission.description}
+                </p>
               </div>
               <div className="flex flex-wrap gap-2 text-xs text-slate-700">
-                {mission.duration && <span className="inline-flex px-3 py-1 rounded-full bg-white text-slate-900 border border-slate-200">Duracion {mission.duration}</span>}
-                {mission.impact && <span className="inline-flex px-3 py-1 rounded-full bg-white text-slate-900 border border-slate-200">{mission.impact}</span>}
-                {mission.skillPoints != null && <span className="inline-flex px-3 py-1 rounded-full bg-white text-slate-900 border border-slate-200">{mission.skillPoints} pts habilidad</span>}
+                {mission.duration && (
+                  <span className="inline-flex px-3 py-1 rounded-full bg-white text-slate-900 border border-slate-200">
+                    Duracion {mission.duration}
+                  </span>
+                )}
+                {mission.impact && (
+                  <span className="inline-flex px-3 py-1 rounded-full bg-white text-slate-900 border border-slate-200">
+                    {mission.impact}
+                  </span>
+                )}
+                {mission.skillPoints != null && (
+                  <span className="inline-flex px-3 py-1 rounded-full bg-white text-slate-900 border border-slate-200">
+                    {mission.skillPoints} pts habilidad
+                  </span>
+                )}
               </div>
             </div>
             {mission.objective && (
               <div className="mt-4">
-                <h2 className="text-sm font-semibold text-slate-700">Objetivo</h2>
-                <p className="text-sm text-slate-600 mt-1">{mission.objective}</p>
+                <h2 className="text-sm font-semibold text-slate-700">
+                  Objetivo
+                </h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  {mission.objective}
+                </p>
               </div>
             )}
             {mission.scenario && (
               <div className="mt-4">
-                <h2 className="text-sm font-semibold text-slate-700">Escenario</h2>
-                <p className="text-sm text-slate-600 mt-1">{mission.scenario}</p>
+                <h2 className="text-sm font-semibold text-slate-700">
+                  Escenario
+                </h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  {mission.scenario}
+                </p>
               </div>
             )}
             {mission.deliverable && (
               <div className="mt-4 border border-slate-200 rounded-xl p-4 bg-white">
-                <h2 className="text-sm font-semibold text-slate-700">Entrega esperada</h2>
-                <p className="text-sm text-slate-600 mt-1">{mission.deliverable}</p>
+                <h2 className="text-sm font-semibold text-slate-700">
+                  Entrega esperada
+                </h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  {mission.deliverable}
+                </p>
               </div>
             )}
             <div className="mt-6 flex flex-wrap gap-3">
@@ -105,7 +138,9 @@ export default function MissionDetail() {
         <div className="grid gap-6 lg:grid-cols-2">
           {dataset.length > 0 && (
             <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-3">
-              <h2 className="text-lg font-semibold text-slate-900">Dataset de trabajo</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Dataset de trabajo
+              </h2>
               <ul className="space-y-2 text-sm text-slate-600 list-disc list-inside">
                 {dataset.map((item, index) => (
                   <li key={`${mission.id}-detail-dataset-${index}`}>{item}</li>
@@ -115,7 +150,9 @@ export default function MissionDetail() {
           )}
           {tasks.length > 0 && (
             <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-3">
-              <h2 className="text-lg font-semibold text-slate-900">Pasos sugeridos</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Pasos sugeridos
+              </h2>
               <ol className="space-y-2 text-sm text-slate-600 list-decimal list-inside">
                 {tasks.map((item, index) => (
                   <li key={`${mission.id}-detail-task-${index}`}>{item}</li>
@@ -127,7 +164,9 @@ export default function MissionDetail() {
 
         {reflection.length > 0 && (
           <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-3">
-            <h2 className="text-lg font-semibold text-slate-900">Preguntas para reflexionar</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Preguntas para reflexionar
+            </h2>
             <ul className="space-y-2 text-sm text-slate-600 list-disc list-inside">
               {reflection.map((item, index) => (
                 <li key={`${mission.id}-detail-reflection-${index}`}>{item}</li>
@@ -138,12 +177,19 @@ export default function MissionDetail() {
 
         {resources.length > 0 && (
           <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-3">
-            <h2 className="text-lg font-semibold text-slate-900">Recursos sugeridos</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Recursos sugeridos
+            </h2>
             <ul className="space-y-2 text-sm text-slate-600 list-disc list-inside">
               {resources.map((resource, index) => (
                 <li key={`${mission.id}-detail-resource-${index}`}>
                   {resource.url ? (
-                    <a href={resource.url} target="_blank" rel="noreferrer" className="text-sky-600 hover:text-sky-500">
+                    <a
+                      href={resource.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sky-600 hover:text-sky-500"
+                    >
                       {resource.label || resource.url}
                     </a>
                   ) : (
@@ -156,12 +202,11 @@ export default function MissionDetail() {
         )}
       </div>
 
-      <MissionRubricModal open={rubricOpen} mission={mission} onClose={() => setRubricOpen(false)} />
+      <MissionRubricModal
+        open={rubricOpen}
+        mission={mission}
+        onClose={() => setRubricOpen(false)}
+      />
     </div>
   );
 }
-
-
-
-
-

@@ -20,12 +20,15 @@ export default class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="p-4 text-sm text-white bg-rose-700">
-          <p className="font-semibold">Se produjo un error al renderizar la UI.</p>
-          <pre className="mt-2 whitespace-pre-wrap">{String(this.state.error)}</pre>
+          <p className="font-semibold">
+            Se produjo un error al renderizar la UI.
+          </p>
+          <pre className="mt-2 whitespace-pre-wrap">
+            {String(this.state.error)}
+          </pre>
         </div>
       );
     }
     return this.props.children;
   }
 }
-

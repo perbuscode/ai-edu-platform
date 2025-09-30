@@ -15,7 +15,10 @@ export default function LessonNotes({
   placeholder = "Escribe tus notas, dudas o ideas...",
 }) {
   const { user } = useAuth();
-  const storageKey = useMemo(() => `${storageKeyPrefix}${lessonId}`, [storageKeyPrefix, lessonId]);
+  const storageKey = useMemo(
+    () => `${storageKeyPrefix}${lessonId}`,
+    [storageKeyPrefix, lessonId]
+  );
   const [text, setText] = useState("");
   const [savedAt, setSavedAt] = useState(null);
   const [dirty, setDirty] = useState(false);
@@ -25,8 +28,10 @@ export default function LessonNotes({
     let cancelled = false;
     (async () => {
       if (user) {
-        const cloud = await loadNotes({ uid: user.uid, lessonId }).catch(() => '');
-        if (!cancelled && typeof cloud === 'string' && cloud.length > 0) {
+        const cloud = await loadNotes({ uid: user.uid, lessonId }).catch(
+          () => ""
+        );
+        if (!cancelled && typeof cloud === "string" && cloud.length > 0) {
           setText(cloud);
           setDirty(false);
           setSavedAt(new Date());
@@ -35,12 +40,16 @@ export default function LessonNotes({
       }
       try {
         const v = localStorage.getItem(storageKey);
-        setText(typeof v === 'string' ? v : '');
+        setText(typeof v === "string" ? v : "");
         setDirty(false);
         setSavedAt(v ? new Date() : null);
-      } catch {}
+      } catch (_error) {
+        // noop
+      }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [storageKey, user, lessonId]);
 
   // Auto-save with small debounce
@@ -54,7 +63,9 @@ export default function LessonNotes({
         }
         setSavedAt(new Date());
         setDirty(false);
-      } catch {}
+      } catch (_error) {
+        // noop
+      }
     }, 400);
     return () => clearTimeout(t);
   }, [dirty, text, storageKey, user, lessonId]);
@@ -70,7 +81,9 @@ export default function LessonNotes({
       if (user) await saveNotes({ uid: user.uid, lessonId, text });
       setSavedAt(new Date());
       setDirty(false);
-    } catch {}
+    } catch (_error) {
+      // noop
+    }
   }
 
   function onClear() {
@@ -78,17 +91,25 @@ export default function LessonNotes({
     setDirty(true);
     try {
       localStorage.removeItem(storageKey);
-    } catch {}
+    } catch (_error) {
+      // noop
+    }
   }
 
   return (
-    <div className={`bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl ${className}`}>
+    <div
+      className={`bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl ${className}`}
+    >
       <div className="p-4 border-b border-gray-200 dark:border-slate-800">
         <h4 className="font-semibold text-sm">Notas de la lección</h4>
-        <p className="text-xs text-gray-500 dark:text-slate-400">Guardado local por lección</p>
+        <p className="text-xs text-gray-500 dark:text-slate-400">
+          Guardado local por lección
+        </p>
       </div>
       <div className="p-4">
-        <label className="sr-only" htmlFor="lesson-notes-textarea">Notas</label>
+        <label className="sr-only" htmlFor="lesson-notes-textarea">
+          Notas
+        </label>
         <textarea
           id="lesson-notes-textarea"
           className="w-full h-36 text-sm rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
@@ -98,7 +119,10 @@ export default function LessonNotes({
         />
 
         <div className="mt-2 flex items-center justify-between">
-          <div className="text-xs text-gray-500 dark:text-slate-400" aria-live="polite">
+          <div
+            className="text-xs text-gray-500 dark:text-slate-400"
+            aria-live="polite"
+          >
             {dirty ? (
               <span>Cambios sin guardar…</span>
             ) : savedAt ? (

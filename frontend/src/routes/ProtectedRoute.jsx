@@ -10,7 +10,10 @@ export default function ProtectedRoute({ children }) {
     return (
       <div className="min-h-[60vh] grid place-items-center">
         <div className="inline-flex items-center gap-2 text-slate-200">
-          <span className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-transparent animate-spin" aria-hidden="true" />
+          <span
+            className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-transparent animate-spin"
+            aria-hidden="true"
+          />
           Cargando...
         </div>
       </div>
@@ -23,4 +26,3 @@ export default function ProtectedRoute({ children }) {
 
   return children;
 }
-

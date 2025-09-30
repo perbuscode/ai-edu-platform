@@ -1,5 +1,7 @@
-﻿// src/pages/Dashboard.jsx
+// src/pages/Dashboard.jsx
 import React, { useCallback } from "react";
+import { useScrollToHash } from "../hooks/useScrollToHash";
+import { useDashboard } from "../context/DashboardProvider";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../app/DashboardLayout";
 import useActiveSection from "../app/useActiveSection";
@@ -15,12 +17,12 @@ import SkillsWallet from "../sections/SkillsWallet";
 
 export default function Dashboard() {
   const { activeId, observe } = useActiveSection();
+  const { loading } = useDashboard();
   const navigate = useNavigate();
+  useScrollToHash([loading]);
 
-  // Sidebar links sin "Métricas" se calculan al pasar al layout
-  // Navegación del sidebar: Métricas primero, sin Certificaciones ni Skills Wallet
-  const links = [
-    { href: "#metrics", label: "Métricas" },
+  // Define todas las secciones disponibles en el dashboard.
+  const sections = [
     { href: "#intro", label: "Inicio" },
     { href: "#cursos", label: "Mis cursos" },
     { href: "#mapa", label: "Mapa & Misiones" },
@@ -28,53 +30,38 @@ export default function Dashboard() {
     { href: "#tutor", label: "Tutor IA" },
     { href: "#copilot", label: "Co-pilot" },
   ];
-
-  // Reorder and clean links: Métricas first, remove Certificaciones and Skills Wallet
-  /* const navLinks = React.useMemo(() => {
-    try {
-      const without = (links || []).filter(
-        (l) => l?.href !== '#certificaciones' && l?.href !== '#wallet'
-      );
-      const metrics = without.find((l) => l?.href === '#metrics');
-      const rest = without.filter((l) => l?.href !== '#metrics');
-      const fixedMetrics = metrics ? { ...metrics, label: 'Métricas' } : null;
-      return fixedMetrics ? [fixedMetrics, ...rest] : without;
-    } catch {
-      return links || [];
-    }
-  }, []); */
-
-/*       const legacyLinks = [
-    { href: "#intro", label: "Inicio" },
-    { href: "#cursos", label: "Mis cursos" },
-    { href: "#certificaciones", label: "Certificaciones" },
-    { href: "#metrics", label: "Métricas" },
-    { href: "#mapa", label: "Mapa & Misiones" },
-    { href: "#empleo", label: "Empleabilidad" },
-    { href: "#wallet", label: "Skills Wallet" },
-    { href: "#portafolio", label: "Portafolio" },
-    { href: "#tutor", label: "Tutor IA" },
-    { href: "#copilot", label: "Co-pilot" },
-  ]; */
+  // Los enlaces del sidebar son todas las secciones excepto las que queremos ocultar.
+  const sidebarLinks = sections.filter((l) => !["#metrics"].includes(l?.href));
 
   const onLinkClick = useCallback((hash) => {
-    const id = hash.replace('#', '');
+    const id = hash.replace("#", "");
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
-      try { window.history.replaceState(null, "", `#${id}`); } catch {}
+      try {
+        window.history.replaceState(null, "", `#${id}`);
+      } catch (_error) {
+        // noop
+      }
     }
   }, []);
 
   return (
-    <DashboardLayout links={links.filter((l) => !["#metrics"].includes(l?.href))} activeId={activeId} onLinkClick={onLinkClick} title="Dashboard del estudiante">
+    <DashboardLayout
+      links={sidebarLinks}
+      activeId={activeId}
+      onLinkClick={onLinkClick}
+      title="Dashboard del estudiante"
+    >
       <Intro observe={observe} />
       <Metrics observe={observe} />
       <NextClasses observe={observe} />
       <Courses
         observe={observe}
-        onOpenCourse={(c) => navigate('/course', { state: { courseId: c?.id } })}
-        onOpenCerts={() => navigate('/dashboard/certificaciones')}
+        onOpenCourse={(c) =>
+          navigate("/course", { state: { courseId: c?.id } })
+        }
+        onOpenCerts={() => navigate("/dashboard/certificaciones")}
       />
       <SkillsMap observe={observe} />
       <Employability observe={observe} />
@@ -82,9 +69,3 @@ export default function Dashboard() {
     </DashboardLayout>
   );
 }
-
-
-
-
-
-

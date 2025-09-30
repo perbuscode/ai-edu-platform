@@ -17,7 +17,9 @@ export default function BlogPostModal({ open, onClose, post }) {
               {tag}
             </span>
           )}
-          {date && <time dateTime={date}>{new Date(date).toLocaleDateString()}</time>}
+          {date && (
+            <time dateTime={date}>{new Date(date).toLocaleDateString()}</time>
+          )}
         </div>
 
         {image && (
@@ -26,16 +28,19 @@ export default function BlogPostModal({ open, onClose, post }) {
               src={image}
               alt={title}
               className="w-full h-56 object-cover"
-              onError={(e) => { e.currentTarget.style.display = "none"; }}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
             />
           </div>
         )}
 
         <div>
-          <p className="whitespace-pre-line text-slate-700 leading-relaxed">{body}</p>
+          <p className="whitespace-pre-line text-slate-700 leading-relaxed">
+            {body}
+          </p>
         </div>
       </article>
     </Modal>
   );
 }
-

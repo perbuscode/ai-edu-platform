@@ -20,7 +20,9 @@ function loadState(key, fallback) {
 function saveState(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch {}
+  } catch (_error) {
+    // noop
+  }
 }
 
 export default function StudyPlan() {
@@ -58,8 +60,8 @@ export default function StudyPlan() {
   useEffect(() => {
     saveState(storageKey, { completed: Array.from(completed), notes });
     if (user) {
-      const courseId = course?.id || 'course';
-      const lessonId = course?.currentLesson?.id || 'lesson';
+      const courseId = course?.id || "course";
+      const lessonId = course?.currentLesson?.id || "lesson";
       saveLessonProgress({
         uid: user.uid,
         courseId,
@@ -74,16 +76,23 @@ export default function StudyPlan() {
     let cancelled = false;
     async function run() {
       if (!user) return;
-      const courseId = course?.id || 'course';
-      const lessonId = course?.currentLesson?.id || 'lesson';
-      const data = await loadLessonProgress({ uid: user.uid, courseId, lessonId }).catch(() => null);
+      const courseId = course?.id || "course";
+      const lessonId = course?.currentLesson?.id || "lesson";
+      const data = await loadLessonProgress({
+        uid: user.uid,
+        courseId,
+        lessonId,
+      }).catch(() => null);
       if (!cancelled && data) {
-        if (Array.isArray(data.completedSteps)) setCompleted(new Set(data.completedSteps));
-        if (typeof data.notes === 'string') setNotes(data.notes);
+        if (Array.isArray(data.completedSteps))
+          setCompleted(new Set(data.completedSteps));
+        if (typeof data.notes === "string") setNotes(data.notes);
       }
     }
     run();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   // Reglas de desbloqueo secuencial
@@ -101,7 +110,9 @@ export default function StudyPlan() {
 
   function canComplete(index) {
     // Puedes completar el paso i si todos los anteriores están completos
-    return index <= 1 || steps.slice(0, index - 1).every((s) => completed.has(s.id));
+    return (
+      index <= 1 || steps.slice(0, index - 1).every((s) => completed.has(s.id))
+    );
   }
 
   function handleCompleteCurrent() {
@@ -138,59 +149,67 @@ export default function StudyPlan() {
 
   function downloadCertificatePDF() {
     try {
-      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: "a4",
+      });
       const w = doc.internal.pageSize.getWidth();
       const h = doc.internal.pageSize.getHeight();
 
       // Marco
-      doc.setDrawColor(14,165,233);
+      doc.setDrawColor(14, 165, 233);
       doc.setLineWidth(6);
       doc.rect(24, 24, w - 48, h - 48);
-      doc.setDrawColor(56,189,248);
+      doc.setDrawColor(56, 189, 248);
       doc.setLineWidth(2);
       doc.rect(44, 44, w - 88, h - 88);
 
       // Título
-      doc.setTextColor(15,23,42);
-      doc.setFont('helvetica','bold');
+      doc.setTextColor(15, 23, 42);
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(30);
-      doc.text('Certificado de Finalización', w/2, 120, { align: 'center' });
+      doc.text("Certificado de Finalización", w / 2, 120, { align: "center" });
 
       // Subtítulo
-      doc.setFont('helvetica','normal');
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(14);
-      doc.setTextColor(51,65,85);
-      doc.text('Edvance certifica que', w/2, 160, { align: 'center' });
+      doc.setTextColor(51, 65, 85);
+      doc.text("Edvance certifica que", w / 2, 160, { align: "center" });
 
       // Nombre
-      const name = user?.displayName || 'Estudiante';
-      doc.setFont('helvetica','bold');
+      const name = user?.displayName || "Estudiante";
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(26);
-      doc.setTextColor(17,24,39);
-      doc.text(name, w/2, 195, { align: 'center' });
+      doc.setTextColor(17, 24, 39);
+      doc.text(name, w / 2, 195, { align: "center" });
 
       // Detalle
-      doc.setFont('helvetica','normal');
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(14);
-      const courseTitle = course?.title || 'Plan de estudio';
-      doc.text(`ha completado el plan: ${courseTitle}`, w/2, 225, { align: 'center' });
+      const courseTitle = course?.title || "Plan de estudio";
+      doc.text(`ha completado el plan: ${courseTitle}`, w / 2, 225, {
+        align: "center",
+      });
 
       // Fecha
       const date = new Date().toLocaleDateString();
-      doc.setTextColor(71,85,105);
-      doc.text(`${date}`, w/2, 255, { align: 'center' });
+      doc.setTextColor(71, 85, 105);
+      doc.text(`${date}`, w / 2, 255, { align: "center" });
 
       // Sello
-      doc.setFillColor(14,165,233);
-      doc.circle(w - 170, h - 120, 50, 'F');
-      doc.setTextColor(255,255,255);
+      doc.setFillColor(14, 165, 233);
+      doc.circle(w - 170, h - 120, 50, "F");
+      doc.setTextColor(255, 255, 255);
       doc.setFontSize(16);
-      doc.text('EDVANCE', w - 170, h - 124, { align: 'center' });
+      doc.text("EDVANCE", w - 170, h - 124, { align: "center" });
       doc.setFontSize(12);
-      doc.text('CERTIFICADO', w - 170, h - 104, { align: 'center' });
+      doc.text("CERTIFICADO", w - 170, h - 104, { align: "center" });
 
-      doc.save('certificado.pdf');
-    } catch {}
+      doc.save("certificado.pdf");
+    } catch (_error) {
+      // noop
+    }
   }
 
   // Contenido por paso (placeholder con datos del mock)
@@ -201,9 +220,16 @@ export default function StudyPlan() {
         <div>
           <h4 className="text-lg font-semibold mb-3">Clase en video</h4>
           <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-slate-800 bg-black aspect-video mb-4 grid place-items-center">
-            <span className="text-white/70 text-sm">[Player de video embebido]</span>
+            <span className="text-white/70 text-sm">
+              [Player de video embebido]
+            </span>
           </div>
-          <p className="text-sm text-slate-700">Duración: <span className="font-semibold text-slate-900">{course?.currentLesson?.duration || "45 min"}</span></p>
+          <p className="text-sm text-slate-700">
+            Duración:{" "}
+            <span className="font-semibold text-slate-900">
+              {course?.currentLesson?.duration || "45 min"}
+            </span>
+          </p>
         </div>
       );
     }
@@ -223,8 +249,12 @@ export default function StudyPlan() {
       return (
         <div>
           <h4 className="text-lg font-semibold mb-3">Ejercicio guiado</h4>
-          <p className="text-sm text-gray-700 dark:text-slate-200 mb-2">{course?.currentLesson?.exercise}</p>
-          <label className="sr-only" htmlFor="exercise-notes">Tu solución o notas</label>
+          <p className="text-sm text-gray-700 dark:text-slate-200 mb-2">
+            {course?.currentLesson?.exercise}
+          </p>
+          <label className="sr-only" htmlFor="exercise-notes">
+            Tu solución o notas
+          </label>
           <textarea
             id="exercise-notes"
             className="w-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 text-sm"
@@ -251,7 +281,10 @@ export default function StudyPlan() {
   const stepId = steps[currentStep - 1]?.id;
   const canMark = canComplete(currentStep) && !completed.has(stepId);
 
-  const nextLabel = currentStep < total ? `Siguiente: ${steps[currentStep]?.label}` : "Finalizar";
+  const nextLabel =
+    currentStep < total
+      ? `Siguiente: ${steps[currentStep]?.label}`
+      : "Finalizar";
   const prevDisabled = currentStep <= 1;
   const nextDisabled = currentStep >= total ? false : !completed.has(stepId); // obliga a completar antes de avanzar
 
@@ -261,11 +294,15 @@ export default function StudyPlan() {
       <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-5">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h3 id="studyplan-title" className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+            <h3
+              id="studyplan-title"
+              className="text-lg font-semibold text-gray-900 dark:text-slate-100"
+            >
               Plan de estudio
             </h3>
             <p className="text-sm text-gray-600 dark:text-slate-300">
-              {course?.title} · Lección: {course?.currentLesson?.title || "Actual"}
+              {course?.title} · Lección:{" "}
+              {course?.currentLesson?.title || "Actual"}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -281,16 +318,28 @@ export default function StudyPlan() {
 
         <div className="mt-4">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-sm text-gray-600 dark:text-slate-300">Completado</span>
-            <span className="text-sm font-medium text-green-600">{percent}%</span>
+            <span className="text-sm text-gray-600 dark:text-slate-300">
+              Completado
+            </span>
+            <span className="text-sm font-medium text-green-600">
+              {percent}%
+            </span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-slate-800 rounded-full h-2" aria-hidden="true">
+          <div
+            className="w-full bg-gray-200 dark:bg-slate-800 rounded-full h-2"
+            aria-hidden="true"
+          >
             <div
               className="h-2 rounded-full"
-              style={{ width: `${percent}%`, background: "linear-gradient(90deg,#4ade80 0%,#22c55e 100%)" }}
+              style={{
+                width: `${percent}%`,
+                background: "linear-gradient(90deg,#4ade80 0%,#22c55e 100%)",
+              }}
             />
           </div>
-          <div className="sr-only" aria-live="polite">{percent}% completado</div>
+          <div className="sr-only" aria-live="polite">
+            {percent}% completado
+          </div>
         </div>
       </div>
 
@@ -369,18 +418,24 @@ export default function StudyPlan() {
               >
                 <span className="text-sm">
                   {i1}. {s.label}
-                  {isCurrent && <span className="ml-2 text-xs text-blue-600">(Actual)</span>}
+                  {isCurrent && (
+                    <span className="ml-2 text-xs text-blue-600">(Actual)</span>
+                  )}
                 </span>
                 <span
                   className={`text-xs px-2 py-1 rounded ${
                     isDone
                       ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
                       : i1 <= maxUnlocked
-                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                      : "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
+                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                        : "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
                   }`}
                 >
-                  {isDone ? "Completado" : i1 <= maxUnlocked ? "Disponible" : "Bloqueado"}
+                  {isDone
+                    ? "Completado"
+                    : i1 <= maxUnlocked
+                      ? "Disponible"
+                      : "Bloqueado"}
                 </span>
               </li>
             );

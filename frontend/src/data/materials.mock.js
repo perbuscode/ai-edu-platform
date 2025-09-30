@@ -43,4 +43,3 @@ export function markMaterialDownloaded(id) {
   if (it) it.descargado = true;
   return it ?? null;
 }
-

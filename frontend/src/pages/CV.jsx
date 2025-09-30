@@ -61,7 +61,8 @@ const resume = {
   additional: [
     {
       label: "Technical Skills",
-      value: "Project Management, Structural Analysis, Robotics and Automation, CAD",
+      value:
+        "Project Management, Structural Analysis, Robotics and Automation, CAD",
     },
     {
       label: "Languages",
@@ -69,11 +70,13 @@ const resume = {
     },
     {
       label: "Certifications",
-      value: "Professional Engineer (PE) License, Project Management Professional (PMP)",
+      value:
+        "Professional Engineer (PE) License, Project Management Professional (PMP)",
     },
     {
       label: "Awards & Achievements",
-      value: "Received the Engineering Excellence Award for outstanding contributions to project innovation at Borello Technologies.",
+      value:
+        "Received the Engineering Excellence Award for outstanding contributions to project innovation at Borello Technologies.",
     },
   ],
 };
@@ -126,7 +129,10 @@ export default function CV() {
       doc.setFont("helvetica", "normal");
       y += lineHeight;
       job.bullets.forEach((bullet) => {
-        const bulletLines = doc.splitTextToSize(`${bulletChar} ${bullet}`, maxWidth);
+        const bulletLines = doc.splitTextToSize(
+          `${bulletChar} ${bullet}`,
+          maxWidth
+        );
         doc.text(bulletLines, margin, y);
         y += bulletLines.length * lineHeight;
       });
@@ -179,12 +185,18 @@ export default function CV() {
         <div className="max-w-5xl mx-auto px-4 md:px-6 space-y-6">
           <section className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-200 p-8">
             <header className="border-b border-slate-200 pb-6">
-              <p className="text-xs font-semibold tracking-[0.35em] text-slate-500 uppercase">Professional resume</p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 uppercase">{resume.name}</h1>
+              <p className="text-xs font-semibold tracking-[0.35em] text-slate-500 uppercase">
+                Professional resume
+              </p>
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 uppercase">
+                {resume.name}
+              </h1>
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
                 {resume.contact.map((item, index) => (
                   <span key={item} className="flex items-center gap-2">
-                    {index > 0 && <span className="text-slate-400">{bulletChar}</span>}
+                    {index > 0 && (
+                      <span className="text-slate-400">{bulletChar}</span>
+                    )}
                     <span>{item}</span>
                   </span>
                 ))}
@@ -193,18 +205,31 @@ export default function CV() {
 
             <div className="mt-6 space-y-8">
               <div>
-                <h2 className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase">Summary</h2>
-                <p className="mt-2 text-sm leading-relaxed text-slate-700">{resume.summary}</p>
+                <h2 className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase">
+                  Summary
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                  {resume.summary}
+                </p>
               </div>
 
               <div>
-                <h2 className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase">Work Experience</h2>
+                <h2 className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase">
+                  Work Experience
+                </h2>
                 <div className="mt-3 space-y-5">
                   {resume.experience.map((job) => (
-                    <article key={`${job.title}-${job.company}`} className="border border-slate-200 rounded-xl p-4">
+                    <article
+                      key={`${job.title}-${job.company}`}
+                      className="border border-slate-200 rounded-xl p-4"
+                    >
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-base font-semibold text-slate-900">{job.title}, {job.company}</h3>
-                        <span className="text-sm text-slate-500">{job.dates}</span>
+                        <h3 className="text-base font-semibold text-slate-900">
+                          {job.title}, {job.company}
+                        </h3>
+                        <span className="text-sm text-slate-500">
+                          {job.dates}
+                        </span>
                       </div>
                       <ul className="mt-3 space-y-2 text-sm text-slate-700 list-disc pl-5">
                         {job.bullets.map((bullet) => (
@@ -217,28 +242,47 @@ export default function CV() {
               </div>
 
               <div>
-                <h2 className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase">Education</h2>
+                <h2 className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase">
+                  Education
+                </h2>
                 <div className="mt-3 space-y-4">
                   {resume.education.map((edu) => (
                     <article key={edu.degree} className="grid gap-1">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-base font-semibold text-slate-900">{edu.degree}</h3>
-                        <span className="text-sm text-slate-500">{edu.dates}</span>
+                        <h3 className="text-base font-semibold text-slate-900">
+                          {edu.degree}
+                        </h3>
+                        <span className="text-sm text-slate-500">
+                          {edu.dates}
+                        </span>
                       </div>
-                      <p className="text-sm text-slate-600">{edu.institution}</p>
-                      {edu.detail && <p className="text-sm text-slate-600">{edu.detail}</p>}
+                      <p className="text-sm text-slate-600">
+                        {edu.institution}
+                      </p>
+                      {edu.detail && (
+                        <p className="text-sm text-slate-600">{edu.detail}</p>
+                      )}
                     </article>
                   ))}
                 </div>
               </div>
 
               <div>
-                <h2 className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase">Additional Information</h2>
+                <h2 className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase">
+                  Additional Information
+                </h2>
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   {resume.additional.map((item) => (
-                    <div key={item.label} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{item.label}</p>
-                      <p className="mt-2 text-sm text-slate-700 leading-relaxed">{item.value}</p>
+                    <div
+                      key={item.label}
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        {item.label}
+                      </p>
+                      <p className="mt-2 text-sm text-slate-700 leading-relaxed">
+                        {item.value}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -253,7 +297,6 @@ export default function CV() {
               Descargar PDF
             </button>
           </div>
-
         </div>
       </main>
     </div>

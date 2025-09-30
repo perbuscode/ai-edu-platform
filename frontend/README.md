@@ -1,6 +1,6 @@
 # Frontend
 
-Este directorio contiene la aplicación web (CRA + Tailwind + React Router + Firebase Auth).
+Este directorio contiene la aplicación web (Create React App + Tailwind + React Router + Firebase Auth).
 
 ## Estructura
 
@@ -9,12 +9,13 @@ Este directorio contiene la aplicación web (CRA + Tailwind + React Router + Fir
 
 ## Puesta en marcha
 
-1) Instalar dependencias
+1. Instalar dependencias
 
+- Si hay conflictos de versiones de React, elimina instalaciones previas en la raíz del repositorio.
 - En la raíz del repositorio elimina instalaciones previas si hay conflictos de React.
 - En `frontend/` ejecuta: `npm install`
 
-2) Variables de entorno
+2. Variables de entorno
 
 - Copia `frontend/.env.example` a `.env` o `.env.local` y completa los valores:
   - `REACT_APP_FIREBASE_API_KEY=`
@@ -24,24 +25,25 @@ Este directorio contiene la aplicación web (CRA + Tailwind + React Router + Fir
   - `REACT_APP_FIREBASE_MESSAGING_SENDER_ID=`
   - `REACT_APP_FIREBASE_APP_ID=`
 
-3) Configurar Firebase
+3. Configurar Firebase
 
 - En Firebase Console → Authentication → Sign-in method: habilita Email/Password y Google.
-- Agrega tu dominio de desarrollo/producción en “Authorized domains”.
+- Agrega tu dominio de desarrollo/producción en “Authorized domains” (Dominios autorizados).
 
-4) Ejecutar en local
+4. Ejecutar en local
 
 - Desde `frontend/`: `npm start`
 
 ## Autenticación (resumen)
 
-- `src/firebase.js`: inicializa Firebase (usa `REACT_APP_*`).
+- `src/firebase.js`: inicializa Firebase (usando las variables `REACT_APP_*`).
 - `src/context/AuthContext.jsx`: expone `register`, `login`, `loginWithGoogle`, `resetPassword`, `logout` y estado `user`, `loading`, `error`.
 - `src/components/AuthModal.jsx`: modal accesible con pestañas Login/Registro/Recuperar, validación y Google Sign-In.
 - `src/routes/ProtectedRoute.jsx`: protege `/dashboard`.
 - `src/pages/Dashboard.jsx`: base para secciones/widgets.
 
 Flujos UX:
+
 - Tras registro/login/Google: cierra modal y navega a `/dashboard`.
 - Reset de contraseña: muestra toast informativo.
 - Logout: navega a `/` y muestra toast.
@@ -54,7 +56,7 @@ Flujos UX:
 
 ## Solución de problemas
 
-Invalid hook call (BrowserRouter / useRef null):
+Llamada de hook inválida (Invalid hook call - BrowserRouter / useRef null):
 
 - Causa típica: dos copias de React o desajuste de versiones entre React y ReactDOM/router.
 - Solución:
@@ -76,4 +78,3 @@ Credenciales Firebase:
 - Navbar → “Iniciar sesión” (email/contraseña/Google) → redirige a `/dashboard`.
 - Recuperar contraseña → muestra toast de confirmación.
 - `/dashboard` protegido (si no hay sesión, vuelve a `/`).
-

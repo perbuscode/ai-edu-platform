@@ -1,80 +1,82 @@
 // src/components/Footer.jsx
 import React from "react";
-import { SiYoutube, SiTiktok, SiFacebook, SiLinkedin, SiInstagram, SiX } from "react-icons/si";
+import { Link } from "react-router-dom";
+import {
+  Facebook,
+  Linkedin,
+  Music4 as TiktokIcon,
+  Youtube,
+} from "lucide-react";
 
-export default function Footer({ onOpenExample }) {
+const socialLinks = [
+  {
+    href: "https://www.youtube.com/",
+    label: "YouTube",
+    icon: <Youtube size={20} aria-hidden />,
+  },
+  {
+    href: "https://www.tiktok.com/",
+    label: "TikTok",
+    icon: <TiktokIcon size={20} aria-hidden />,
+  },
+  {
+    href: "https://www.facebook.com/",
+    label: "Facebook",
+    icon: <Facebook size={20} aria-hidden />,
+  },
+  {
+    href: "https://www.linkedin.com/",
+    label: "LinkedIn",
+    icon: <Linkedin size={20} aria-hidden />,
+  },
+];
+
+const footerLinks = [
+  { to: "/terms", label: "Términos y Condiciones" },
+  { to: "/privacy", label: "Política de Privacidad" },
+  { to: "/contacto", label: "Contacto" },
+];
+
+export default function Footer({ className = "" }) {
   return (
-    <footer id="contacto" className="bg-slate-900 border-t border-white/10 mt-[18px] scroll-mt-24 md:scroll-mt-28">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+    <footer
+      className={`${className} py-8 transition-all duration-300 ease-in-out bg-transparent`}
+    >
+      <div className="max-w-7xl mx-auto px-5 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="text-sm">
             <p className="text-slate-300">
               Edvance impulsando el aprendizaje con inteligencia artificial.
             </p>
-            <p className="text-slate-400 mt-1">&copy; 2025 AI EdTech. Todos los derechos reservados.</p>
           </div>
           <div className="flex items-center gap-4 text-slate-300">
-            {/* Orden alfabético: Facebook, Instagram, LinkedIn, TikTok, X, YouTube */}
-            <a
-              href="https://www.facebook.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook (abre en una pestaña nueva)"
-              title="Facebook"
-              className="hover:text-white"
-            >
-              <SiFacebook size={20} aria-hidden />
-            </a>
-            <a
-              href="https://www.instagram.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram (abre en una pestaña nueva)"
-              title="Instagram"
-              className="hover:text-white"
-            >
-              <SiInstagram size={20} aria-hidden />
-            </a>
-            <a
-              href="https://www.linkedin.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn (abre en una pestaña nueva)"
-              title="LinkedIn"
-              className="hover:text-white"
-            >
-              <SiLinkedin size={20} aria-hidden />
-            </a>
-            <a
-              href="https://www.tiktok.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="TikTok (abre en una pestaña nueva)"
-              title="TikTok"
-              className="hover:text-white"
-            >
-              <SiTiktok size={20} aria-hidden />
-            </a>
-            <a
-              href="https://x.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="X (abre en una pestaña nueva)"
-              title="X"
-              className="hover:text-white"
-            >
-              <SiX size={20} aria-hidden />
-            </a>
-            <a
-              href="https://www.youtube.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="YouTube (abre en una pestaña nueva)"
-              title="YouTube"
-              className="hover:text-white"
-            >
-              <SiYoutube size={20} aria-hidden />
-            </a>
+            {socialLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${link.label} (abre en una pestaña nueva)`}
+                title={link.label}
+                className="hover:text-white"
+              >
+                {link.icon}
+              </a>
+            ))}
+          </div>
+        </div>
+        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs text-slate-400">
+          <p>&copy; 2025 AI EdTech. Todos los derechos reservados.</p>
+          <div className="flex items-center gap-4">
+            {footerLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="hover:text-white hover:underline"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

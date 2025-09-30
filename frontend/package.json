@@ -4,14 +4,16 @@
   "private": true,
   "proxy": "http://localhost:4000",
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
+    "@heroicons/react": "^2.2.0",
     "aos": "^2.3.4",
-    "bootstrap": "^5.3.8",
     "firebase": "^10.12.4",
     "jspdf": "^2.5.2",
+    "lucide-react": "^0.544.0",
     "qrcode": "^1.5.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-icons": "^5.5.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.26.2",
     "react-scripts": "5.0.1"
   },
@@ -19,7 +21,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "format": "prettier --write src"
   },
   "browserslist": {
     "production": [

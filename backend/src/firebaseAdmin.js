@@ -4,22 +4,21 @@ let app;
 export function initFirebaseAdmin() {
   if (app) return app;
   // Try GOOGLE_APPLICATION_CREDENTIALS or FIREBASE_SERVICE_ACCOUNT
-  if (!admin.apps.length) {
-    try {
-      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-        const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-        admin.initializeApp({
-          credential: admin.credential.cert(sa),
-        });
-      } else {
-        admin.initializeApp({
-          credential: admin.credential.applicationDefault(),
-        });
-      }
-    } catch (e) {
-      console.warn("[firebase-admin] No se pudo inicializar con credenciales: ", e?.message || e);
-    }
+  if (admin.apps.length > 0) {
+    app = admin.app();
+    return app;
   }
+
+  try {
+    const credential = process.env.FIREBASE_SERVICE_ACCOUNT
+      ? admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
+      : admin.credential.applicationDefault();
+
+    admin.initializeApp({ credential });
+  } catch (e) {
+    console.warn("[firebase-admin] No se pudo inicializar con credenciales: ", e?.message || e);
+  }
+
   app = admin.app();
   return app;
 }
@@ -45,4 +44,3 @@ export async function verifyIdTokenOptional(bearer) {
     return null;
   }
 }
-

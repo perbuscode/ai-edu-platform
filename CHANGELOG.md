@@ -1,6 +1,6 @@
 # Changelog
 
-## 2025-09-13 — Landing polish, Blog como sección, accesibilidad y branding
+## 2025-09-13 — Pulido de Landing, Blog como sección, accesibilidad y branding
 
 - Footer
   - Redes sociales reordenadas arriba y copyright abajo.
@@ -15,7 +15,7 @@
   - Ajustes de espaciado con secciones adyacentes (footer y blog) para ritmo visual consistente.
 - Blog como sección del landing
   - Nuevo `frontend/src/components/BlogSection.jsx` y añadido bajo `ChatPlanner` en `App.js`.
-  - Ruta `/blog` retirada del router; navegación desde navbar apunta a `#blog`.
+  - Ruta `/blog` retirada del router; la navegación desde la barra principal ahora apunta a `#blog`.
 - Navbar
   - Nuevo enlace “Historias” tras “Cursos” (desktop y móvil) y ancla `id="historias"` en `Testimonials`.
   - Reubicación del botón “¿Dudas?”: ahora aparece tras “Registrarse” o después del avatar si hay sesión.
@@ -33,14 +33,14 @@
 
 ## v0.2.0 – Planner API + Firestore (Unreleased)
 
-- Backend Node (Express) con endpoint `POST /api/plan`.
+- Backend en Node (Express) con endpoint `POST /api/plan`.
   - Usa OpenAI si hay `OPENAI_API_KEY`, con fallback a generador local determinístico.
   - CORS configurable por `CORS_ORIGIN`. Healthcheck en `/health`.
 - Frontend: `ChatPlanner` ahora llama al backend, maneja carga/errores
   y abre el modal con el plan generado.
 - Persistencia: si el usuario está autenticado, guarda el plan en
   `users/{uid}/plans/{planId}` en Firestore (con entrada y metadatos).
-- Modal de Plan: acepta `plan` dinámico; conserva ejemplo por defecto.
+- Modal de Plan: acepta un `plan` dinámico; conserva el ejemplo por defecto.
 - DX: `frontend/package.json` añade `proxy` a `http://localhost:4000` para dev.
 - Docs: guía de backend y variables de entorno (`backend/README.md`).
 

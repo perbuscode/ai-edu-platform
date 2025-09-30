@@ -1,7 +1,19 @@
 // src/services/userProfile.js
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
-function dbSafe() { try { return getFirestore(); } catch { return null; } }
+function dbSafe() {
+  try {
+    return getFirestore();
+  } catch {
+    return null;
+  }
+}
 
 export async function loadUserProfile(uid) {
   const db = dbSafe();
@@ -18,4 +30,3 @@ export async function saveUserProfile(uid, data) {
   await setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
   return true;
 }
-

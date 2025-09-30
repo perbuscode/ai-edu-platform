@@ -1,5 +1,13 @@
 // src/components/Toast.jsx
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 const ToastContext = createContext(null);
 
@@ -20,42 +28,56 @@ export function ToastProvider({ children }) {
     timeouts.current.delete(id);
   }, []);
 
-  const push = useCallback((message, type = "info", duration = 3000) => {
-    const now = Date.now();
-    const last = lastRef.current;
-    if (last.msg === message && last.type === type && now - last.at < 1500) {
-      return null; // evitar duplicado inmediato
-    }
-    const t = createToast(message, type, duration);
-    setToasts((prev) => [...prev, t]);
-    const to = setTimeout(() => remove(t.id), duration);
-    timeouts.current.set(t.id, to);
-    lastRef.current = { msg: message, type, at: now };
-    return t.id;
-  }, [remove]);
+  const push = useCallback(
+    (message, type = "info", duration = 3000) => {
+      const now = Date.now();
+      const last = lastRef.current;
+      if (last.msg === message && last.type === type && now - last.at < 1500) {
+        return null; // evitar duplicado inmediato
+      }
+      const t = createToast(message, type, duration);
+      setToasts((prev) => [...prev, t]);
+      const to = setTimeout(() => remove(t.id), duration);
+      timeouts.current.set(t.id, to);
+      lastRef.current = { msg: message, type, at: now };
+      return t.id;
+    },
+    [remove]
+  );
 
-  const api = useMemo(() => ({
-    push,
-    info: (m, d) => push(m, "info", d),
-    success: (m, d) => push(m, "success", d),
-    error: (m, d) => push(m, "error", d),
-    // Atajos para errores comunes
-    offline: (msg = "Sin conexión a internet") => push(msg, "error", 3500),
-    loadError: (msg = "No se pudieron cargar los datos") => push(msg, "error", 3500),
-    forbidden: (msg = "Acción no permitida") => push(msg, "error", 3500),
-  }), [push]);
+  const api = useMemo(
+    () => ({
+      push,
+      info: (m, d) => push(m, "info", d),
+      success: (m, d) => push(m, "success", d),
+      error: (m, d) => push(m, "error", d),
+      // Atajos para errores comunes
+      offline: (msg = "Sin conexión a internet") => push(msg, "error", 3500),
+      loadError: (msg = "No se pudieron cargar los datos") =>
+        push(msg, "error", 3500),
+      forbidden: (msg = "Acción no permitida") => push(msg, "error", 3500),
+    }),
+    [push]
+  );
 
-  useEffect(() => () => {
-    // Limpieza on unmount
-    for (const [, to] of timeouts.current) clearTimeout(to);
-    timeouts.current.clear();
-  }, []);
+  useEffect(
+    () => () => {
+      // Limpieza on unmount
+      for (const [, to] of timeouts.current) clearTimeout(to);
+      timeouts.current.clear();
+    },
+    []
+  );
 
   return (
     <ToastContext.Provider value={api}>
       {children}
       {/* Contenedor de toasts */}
-      <div aria-live="polite" aria-atomic="true" className="pointer-events-none fixed z-[120] bottom-4 right-4 flex flex-col gap-2">
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className="pointer-events-none fixed z-[120] bottom-4 right-4 flex flex-col gap-2"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}
@@ -64,8 +86,11 @@ export function ToastProvider({ children }) {
               "pointer-events-auto min-w-[260px] max-w-sm rounded-lg px-4 py-3 shadow-lg text-sm",
               t.type === "success" && "bg-emerald-600 text-white",
               t.type === "error" && "bg-rose-600 text-white",
-              t.type === "info" && "bg-slate-800 text-slate-100 border border-white/10",
-            ].filter(Boolean).join(" ")}
+              t.type === "info" &&
+                "bg-slate-800 text-slate-100 border border-white/10",
+            ]
+              .filter(Boolean)
+              .join(" ")}
           >
             <div className="flex items-start gap-3">
               <span className="flex-1">{t.message}</span>

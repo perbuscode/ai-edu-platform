@@ -10,18 +10,18 @@ Servidor Node (Express) con endpoint para generar planes de estudio.
 
 ## Ejecutar en local
 
-1) Copia variables:
+1. Copia variables:
 
 ```
 cp backend/.env.example backend/.env
 ```
 
-2) Edita `backend/.env`:
+2. Edita `backend/.env`:
 
 - `OPENAI_API_KEY=` (opcional)
 - `PORT=5050`
 
-3) Instala y arranca:
+3. Instala y arranca:
 
 ```
 cd backend
@@ -40,4 +40,3 @@ Servidor: http://localhost:5050
 
 - No subas tu `OPENAI_API_KEY` al repo.
 - Restringe CORS por dominio en producción.
-
