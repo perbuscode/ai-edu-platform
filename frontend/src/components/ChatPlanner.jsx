@@ -121,7 +121,7 @@ export default function ChatPlanner() {
             </div>
 
             {/* Chat */}
-            <div className="md:col-span-3 bg-white rounded-2xl p-5 shadow-2xl border border-slate-200 relative h-[380px] md:h-auto flex flex-col overflow-hidden">
+            <div className="md:col-span-3 bg-white rounded-2xl p-5 shadow-2xl border border-slate-200 relative h-[480px] flex flex-col overflow-hidden">
               <div
                 ref={listRef}
                 className="space-y-3 flex-1 overflow-auto pr-1"
