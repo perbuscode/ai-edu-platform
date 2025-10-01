@@ -1,4 +1,4 @@
-// src/components/ChatPlanner.jsx
+// frontend/src/components/ChatPlanner.jsx
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import useChatWizard from "../hooks/useChatWizard.js";
 import StudyPlanModal from "./StudyPlanModal.jsx";
@@ -6,39 +6,6 @@ import ReactMarkdown from "react-markdown";
 import { useAuth } from "../context/AuthContext.jsx";
 import { saveStudyPlan } from "../services/planService.js";
 import { useToast } from "./Toast.jsx";
-import { enrichPlanWithGemini } from "../services/planEnricher";
-import { askGemini } from "../services/geminiClient"; // ⬅️ para fallback
-
-// ---- Helper: prompt completo cuando NO hay plan base (fallback) ----
-function buildPlannerPromptFromWizard(messages) {
-  const answers = messages
-    .filter((m) => m.role === "user")
-    .slice(-4)
-    .map((m) => m.content || m.text || "");
-  const [goal, level, hoursPerWeek, weeks] = answers;
-
-  return [
-    "Eres un planificador de estudio experto. Devuelve SOLO el plan en Markdown (sin charla extra).",
-    "Crea un plan realista por semanas, con objetivos SMART, recursos (links Markdown), ejercicios y criterios de evaluación.",
-    "",
-    "Datos del usuario:",
-    `- Objetivo / Tema: ${goal || "(no especificado)"}`,
-    `- Nivel actual: ${level || "(no especificado)"}`,
-    `- Horas por semana: ${hoursPerWeek || "(no especificado)"}`,
-    `- Semanas objetivo: ${weeks || "(no especificado)"}`,
-    "",
-    "Formato requerido:",
-    "## Resumen",
-    "- Objetivo, duración, horas/semana",
-    "",
-    "## Plan por semanas",
-    "- Semana 1: objetivos SMART, contenidos, ejercicios, recursos (links), criterios de éxito",
-    "- Semana 2: ...",
-    "",
-    "## Recursos globales y buenas prácticas",
-    "- …",
-  ].join("\n");
-}
 
 export default function ChatPlanner() {
   const [input, setInput] = useState("");
@@ -48,11 +15,6 @@ export default function ChatPlanner() {
 
   const [isPlanOpen, setPlanOpen] = useState(false);
   const [plan, setPlan] = useState(null);
-
-  // Estados para enriquecido y fallback
-  const [geminiLoading, setGeminiLoading] = useState(false);
-  const [geminiError, setGeminiError] = useState("");
-  const [geminiReply, setGeminiReply] = useState("");
 
   const suggestions = [
     "Power BI para BI Analyst",
@@ -67,7 +29,7 @@ export default function ChatPlanner() {
     "¿En cuántas semanas quieres lograrlo?",
   ];
 
-  // Detecta último plan del backend
+  // Detecta último plan del backend (inyectado por useChatWizard)
   const lastAssistantPlan = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
@@ -76,61 +38,12 @@ export default function ChatPlanner() {
     return null;
   }, [messages]);
 
-  // 🔥 Enriquecer cuando sí hay plan base (flujo híbrido)
+  // Cuando hay plan nuevo -> abrir modal
   useEffect(() => {
     if (!lastAssistantPlan) return;
-
     setPlan(lastAssistantPlan);
     setPlanOpen(true);
-
-    (async () => {
-      setGeminiLoading(true);
-      setGeminiError("");
-      setGeminiReply("");
-      try {
-        const md = await enrichPlanWithGemini(lastAssistantPlan, messages);
-        setGeminiReply(md || "");
-      } catch (err) {
-        console.error("Enrichment error:", err);
-        setGeminiError(err?.message || "No se pudo enriquecer el plan.");
-      } finally {
-        setGeminiLoading(false);
-      }
-    })();
-  }, [lastAssistantPlan, messages]);
-
-  // 🛟 Fallback: si el backend falla y aparece el mensaje de error del asistente,
-  // generamos el plan COMPLETO con Gemini usando las 4 respuestas.
-  useEffect(() => {
-    if (!messages.length) return;
-    const last = messages[messages.length - 1];
-
-    // Debe coincidir con el texto que pones en el catch de useChatWizard
-    const BACKEND_ERROR_MSG =
-      "No pude generar el plan ahora mismo. Intenta de nuevo en un momento o revisa tu conexión.";
-
-    if (last?.role === "assistant" && last?.content === BACKEND_ERROR_MSG) {
-      (async () => {
-        setGeminiLoading(true);
-        setGeminiError("");
-        setGeminiReply("");
-        try {
-          const prompt = buildPlannerPromptFromWizard(messages);
-          const md = await askGemini(prompt);
-          setGeminiReply(md || "");
-          // Opcional: podrías abrir el modal mostrando el Markdown, pero tu modal espera JSON.
-          // Aquí lo dejamos en el chat como burbuja enriquecida.
-        } catch (err) {
-          console.error("Fallback Gemini error:", err);
-          setGeminiError(
-            err?.message || "No se pudo generar el plan con Gemini."
-          );
-        } finally {
-          setGeminiLoading(false);
-        }
-      })();
-    }
-  }, [messages]);
+  }, [lastAssistantPlan]);
 
   async function handleSavePlan(planToSave) {
     if (!user) {
@@ -138,7 +51,15 @@ export default function ChatPlanner() {
       return;
     }
     try {
-      await saveStudyPlan(user.uid, planToSave);
+      await saveStudyPlan(
+        {
+          objective: planToSave?.objective,
+          level: planToSave?.level,
+          hoursPerWeek: planToSave?.hoursPerWeek,
+          weeks: planToSave?.weeks,
+        },
+        { timeoutMs: 120000 }
+      );
       toast.success("¡Plan guardado en tu perfil!");
       setPlanOpen(false);
     } catch (error) {
@@ -175,7 +96,7 @@ export default function ChatPlanner() {
     } catch {
       el.scrollTop = el.scrollHeight;
     }
-  }, [messages, geminiReply, geminiLoading, geminiError]);
+  }, [messages]);
 
   const imgPlaceholder = encodeURI(`data:image/svg+xml;utf8,
     <svg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'>
@@ -262,28 +183,6 @@ export default function ChatPlanner() {
                     )}
                   </div>
                 ))}
-
-                {/* Burbuja extra: enriquecido o fallback de Gemini */}
-                {(geminiLoading || geminiReply || geminiError) && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs font-semibold">
-                      AI
-                    </div>
-                    <div className="rounded-2xl px-4 py-3 bg-slate-100 text-slate-900 shadow prose prose-sm max-w-none">
-                      {geminiLoading && (
-                        <span className="italic text-slate-500">
-                          Preparando contenido con Gemini…
-                        </span>
-                      )}
-                      {!geminiLoading && geminiError && (
-                        <span className="text-red-600">⚠️ {geminiError}</span>
-                      )}
-                      {!geminiLoading && !geminiError && geminiReply && (
-                        <ReactMarkdown>{geminiReply}</ReactMarkdown>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
 
               <form onSubmit={handleSubmit} className="mt-4">
@@ -295,9 +194,7 @@ export default function ChatPlanner() {
                     <input
                       id="chat-input"
                       className="flex-1 outline-none text-slate-900 bg-transparent placeholder-slate-500 placeholder:italic appearance-none"
-                      placeholder={
-                        placeholders[Math.min(step, placeholders.length - 1)]
-                      }
+                      placeholder={placeholders[Math.min(step, placeholders.length - 1)]}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -310,10 +207,10 @@ export default function ChatPlanner() {
                   </div>
                   <button
                     className="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-60"
-                    disabled={loadingPlan || geminiLoading}
-                    aria-busy={loadingPlan || geminiLoading || undefined}
+                    disabled={loadingPlan}
+                    aria-busy={loadingPlan || undefined}
                   >
-                    {loadingPlan || geminiLoading ? "Generando…" : "Enviar"}
+                    {loadingPlan ? "Generando…" : "Enviar"}
                   </button>
                 </div>
               </form>
@@ -324,7 +221,7 @@ export default function ChatPlanner() {
                     key={s}
                     onClick={() => setInput(s)}
                     className="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
-                    disabled={loadingPlan || geminiLoading}
+                    disabled={loadingPlan}
                   >
                     {s}
                   </button>
@@ -335,7 +232,7 @@ export default function ChatPlanner() {
         </div>
       </section>
 
-      {/* Modal del plan (base del backend) */}
+      {/* Modal del plan (responde con el JSON del backend) */}
       <StudyPlanModal
         plan={plan}
         isOpen={isPlanOpen}

@@ -2,7 +2,6 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-// ✅ SDK correcto:
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const app = express();
