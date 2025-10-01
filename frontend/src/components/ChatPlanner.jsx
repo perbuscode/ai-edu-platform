@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { useAuth } from "../context/AuthContext.jsx";
 import { saveStudyPlan } from "../services/planService.js";
 import { useToast } from "./Toast.jsx";
+import { askGemini } from "../services/geminiClient"; // ⬅️ nuevo
 
 export default function ChatPlanner() {
   const [input, setInput] = useState("");
@@ -15,6 +16,11 @@ export default function ChatPlanner() {
 
   const [isPlanOpen, setPlanOpen] = useState(false);
   const [plan, setPlan] = useState(null);
+
+  // ⬇️ Estados locales para la respuesta de Gemini vía Netlify Function
+  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [geminiError, setGeminiError] = useState("");
+  const [geminiReply, setGeminiReply] = useState("");
 
   const suggestions = [
     "Power BI para BI Analyst",
@@ -61,24 +67,64 @@ export default function ChatPlanner() {
     }
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
     setInput("");
+
+    // 1) tu flujo original (hook del asistente)
     submitTurn(text);
+
+    // 2) además, consulta a Gemini por la Function (no interfiere con tu hook)
+    setGeminiError("");
+    setGeminiReply("");
+    setGeminiLoading(true);
+    try {
+      const reply = await askGemini(text);
+      setGeminiReply(reply || "");
+    } catch (err) {
+      console.error("Gemini (Function) error:", err);
+      const msg = err?.message || "Error hablando con Gemini";
+      setGeminiError(msg);
+      toast.error(msg);
+    } finally {
+      setGeminiLoading(false);
+    }
   }
 
+  // Prefill externo
   useEffect(() => {
     const onPrefill = (ev) => {
       const text = ev?.detail?.text;
       if (!text) return;
-      if (step === 0) submitTurn(text);
-      else setInput(text);
+      if (step === 0) {
+        // Si estamos en el primer paso, dispara directo
+        setInput("");
+        submitTurn(text);
+        // Y consulta a Gemini también
+        (async () => {
+          setGeminiError("");
+          setGeminiReply("");
+          setGeminiLoading(true);
+          try {
+            const reply = await askGemini(text);
+            setGeminiReply(reply || "");
+          } catch (err) {
+            const msg = err?.message || "Error hablando con Gemini";
+            setGeminiError(msg);
+            toast.error(msg);
+          } finally {
+            setGeminiLoading(false);
+          }
+        })();
+      } else {
+        setInput(text);
+      }
     };
     window.addEventListener("prefill-plan", onPrefill);
     return () => window.removeEventListener("prefill-plan", onPrefill);
-  }, [step, submitTurn]);
+  }, [step, submitTurn, toast]);
 
   const listRef = useRef(null);
   useEffect(() => {
@@ -89,7 +135,7 @@ export default function ChatPlanner() {
     } catch {
       el.scrollTop = el.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, geminiReply, geminiLoading, geminiError]);
 
   const imgPlaceholder = encodeURI(`data:image/svg+xml;utf8,
     <svg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'>
@@ -176,6 +222,30 @@ export default function ChatPlanner() {
                     )}
                   </div>
                 ))}
+
+                {/* Burbuja adicional para la respuesta de la Function (Gemini 2.5) */}
+                {(geminiLoading || geminiReply || geminiError) && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs font-semibold">
+                      AI
+                    </div>
+                    <div className="rounded-2xl px-4 py-3 bg-slate-100 text-slate-900 shadow prose prose-sm max-w-none">
+                      {geminiLoading && (
+                        <span className="italic text-slate-500">
+                          Gemini está escribiendo…
+                        </span>
+                      )}
+                      {!geminiLoading && geminiError && (
+                        <span className="text-red-600">
+                          ⚠️ {geminiError}
+                        </span>
+                      )}
+                      {!geminiLoading && !geminiError && geminiReply && (
+                        <ReactMarkdown>{geminiReply}</ReactMarkdown>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <form onSubmit={handleSubmit} className="mt-4">
@@ -192,14 +262,20 @@ export default function ChatPlanner() {
                       }
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSubmit(e);
+                        }
+                      }}
                     />
                   </div>
                   <button
-                    className="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
-                    disabled={loadingPlan}
-                    aria-busy={loadingPlan || undefined}
+                    className="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-60"
+                    disabled={loadingPlan || geminiLoading}
+                    aria-busy={loadingPlan || geminiLoading || undefined}
                   >
-                    {loadingPlan ? "Generando…" : "Enviar"}
+                    {loadingPlan || geminiLoading ? "Generando…" : "Enviar"}
                   </button>
                 </div>
               </form>
@@ -208,8 +284,16 @@ export default function ChatPlanner() {
                 {suggestions.map((s) => (
                   <button
                     key={s}
-                    onClick={() => setInput(s)}
+                    onClick={() => {
+                      setInput(s);
+                      // dispara envío inmediato
+                      setTimeout(() => {
+                        const fakeEvent = { preventDefault() { } };
+                        handleSubmit(fakeEvent);
+                      }, 0);
+                    }}
                     className="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
+                    disabled={loadingPlan || geminiLoading}
                   >
                     {s}
                   </button>
