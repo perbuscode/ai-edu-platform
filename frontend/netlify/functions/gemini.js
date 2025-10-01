@@ -1,13 +1,15 @@
 // frontend/netlify/functions/gemini.js
-// Function que llama a Gemini 2.5 Flash vía API REST (sin SDK)
-// Requiere: Node 18+ (fetch nativo) y variable de entorno GEMINI_API_KEY en Netlify
+// Función serverless que llama a Gemini 2.5 Flash vía API REST
+// Requiere: Node 18+ (fetch nativo) y variable GEMINI_API_KEY en Netlify
 
 exports.handler = async (event) => {
   try {
+    // Solo permitir POST
     if (event.httpMethod !== "POST") {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
 
+    // Leer el prompt del body
     const { prompt } = JSON.parse(event.body || "{}");
     if (!prompt || typeof prompt !== "string") {
       return {
@@ -17,6 +19,7 @@ exports.handler = async (event) => {
       };
     }
 
+    // Validar API Key
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error("GEMINI_API_KEY no está configurada");
@@ -27,25 +30,34 @@ exports.handler = async (event) => {
       };
     }
 
+    // Configurar modelo y endpoint
     const modelName = "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
     console.log("[gemini] Using REST, model:", modelName, "prompt length:", prompt.length);
 
+    // Configuración de generación (respuesta breve y rápida)
     const body = {
+      systemInstruction: {
+        role: "system",
+        parts: [{ text: "Responde en un solo párrafo, máximo 6 oraciones." }],
+      },
+      generationConfig: {
+        temperature: 0.6,
+        maxOutputTokens: 200, // 👈 Limita la longitud => más rápido
+        topP: 0.9,
+      },
       contents: [
         {
           role: "user",
           parts: [{ text: prompt }],
         },
       ],
-      // (Opcional) Ajustes de seguridad / generación:
-      // generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
     };
 
+    // Llamada a la API
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // IMPORTANTE: para la API REST se usa ?key=..., no Authorization: Bearer
       body: JSON.stringify(body),
     });
 
@@ -61,7 +73,7 @@ exports.handler = async (event) => {
 
     const data = await res.json();
 
-    // Extraer texto (puede venir en múltiples parts)
+    // Extraer texto de la respuesta
     const text =
       data?.candidates?.[0]?.content?.parts
         ?.map((p) => p.text || "")
