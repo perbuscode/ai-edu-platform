@@ -6,7 +6,43 @@ import ReactMarkdown from "react-markdown";
 import { useAuth } from "../context/AuthContext.jsx";
 import { saveStudyPlan } from "../services/planService.js";
 import { useToast } from "./Toast.jsx";
-import { askGemini } from "../services/geminiClient"; // ⬅️ nuevo
+import { askGemini } from "../services/geminiClient"; // ⬅️ cliente a la Function
+
+// Helper: arma el prompt de Gemini a partir de las últimas 4 respuestas del wizard
+function buildPlannerPromptFromWizard(messagesLikeWizard) {
+  // Tomamos las últimas 4 respuestas del usuario en el flujo
+  const userAnswers = messagesLikeWizard
+    .filter((m) => m.role === "user")
+    .slice(-4)
+    .map((m) => m.content || m.text || "");
+
+  const [goal, background, dailyHours, weeks] = userAnswers;
+
+  return [
+    "Eres un planificador de estudio experto. Devuelve SOLO el plan en Markdown, sin charla adicional.",
+    "Crea un plan realista y accionable con módulos/semanas, objetivos, recursos sugeridos y métricas de progreso.",
+    "",
+    "Datos del usuario:",
+    `- Objetivo / Tema: ${goal || "(no especificado)"}`,
+    `- Experiencia previa: ${background || "(no especificado)"}`,
+    `- Horas diarias: ${dailyHours || "(no especificado)"}`,
+    `- Semanas objetivo: ${weeks || "(no especificado)"}`,
+    "",
+    "Formato requerido:",
+    "## Resumen",
+    "- Objetivo, duración, horas diarias",
+    "",
+    "## Plan por semanas",
+    "- Semana 1: ...",
+    "- Semana 2: ...",
+    "",
+    "## Recursos sugeridos",
+    "- …",
+    "",
+    "## Criterios de éxito",
+    "- …",
+  ].join("\n");
+}
 
 export default function ChatPlanner() {
   const [input, setInput] = useState("");
@@ -17,7 +53,7 @@ export default function ChatPlanner() {
   const [isPlanOpen, setPlanOpen] = useState(false);
   const [plan, setPlan] = useState(null);
 
-  // ⬇️ Estados locales para la respuesta de Gemini vía Netlify Function
+  // Estados locales para respuesta de Gemini (Function)
   const [geminiLoading, setGeminiLoading] = useState(false);
   const [geminiError, setGeminiError] = useState("");
   const [geminiReply, setGeminiReply] = useState("");
@@ -35,7 +71,7 @@ export default function ChatPlanner() {
     "¿En cuántas semanas quieres lograrlo?",
   ];
 
-  // ⬇️ Busca el último mensaje del asistente que contenga un plan
+  // ⬇️ Busca el último mensaje del asistente que contenga un plan (tu lógica original)
   const lastAssistantPlan = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
@@ -44,7 +80,7 @@ export default function ChatPlanner() {
     return null;
   }, [messages]);
 
-  // ⬇️ Abre el modal cuando llegue un plan nuevo
+  // ⬇️ Abre el modal cuando llegue un plan nuevo (tu lógica original)
   useEffect(() => {
     if (lastAssistantPlan) {
       setPlan(lastAssistantPlan);
@@ -67,24 +103,32 @@ export default function ChatPlanner() {
     }
   }
 
+  // IMPORTANTE: Solo llamamos a Gemini cuando el wizard terminó sus 4 preguntas.
+  // Suponemos que step avanza 0→1→2→3 durante preguntas y que "terminado" es step >= 3.
+  // Ajusta si tu hook usa otro número final.
   async function handleSubmit(e) {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
-    setInput("");
 
-    // 1) tu flujo original (hook del asistente)
+    // 1) Avanza el wizard con la respuesta del usuario
+    setInput("");
     submitTurn(text);
 
-    // 2) además, consulta a Gemini por la Function (no interfiere con tu hook)
+    // 2) Si aún no termina el wizard, NO llamamos a Gemini todavía
+    if (step < 3) return;
+
+    // 3) Cuando ya terminó, armamos el prompt final con las 4 respuestas
     setGeminiError("");
     setGeminiReply("");
     setGeminiLoading(true);
     try {
-      const reply = await askGemini(text);
+      // Incluimos el mensaje recién enviado (porque messages aún no se actualiza en este tick)
+      const messagesWithLast = messages.concat({ role: "user", content: text });
+      const finalPrompt = buildPlannerPromptFromWizard(messagesWithLast);
+      const reply = await askGemini(finalPrompt);
       setGeminiReply(reply || "");
     } catch (err) {
-      console.error("Gemini (Function) error:", err);
       const msg = err?.message || "Error hablando con Gemini";
       setGeminiError(msg);
       toast.error(msg);
@@ -93,38 +137,44 @@ export default function ChatPlanner() {
     }
   }
 
-  // Prefill externo
+  // Prefill desde eventos externos: respeta la misma regla (solo llama a Gemini al final)
   useEffect(() => {
     const onPrefill = (ev) => {
       const text = ev?.detail?.text;
       if (!text) return;
+
       if (step === 0) {
-        // Si estamos en el primer paso, dispara directo
         setInput("");
         submitTurn(text);
-        // Y consulta a Gemini también
-        (async () => {
-          setGeminiError("");
-          setGeminiReply("");
-          setGeminiLoading(true);
-          try {
-            const reply = await askGemini(text);
-            setGeminiReply(reply || "");
-          } catch (err) {
-            const msg = err?.message || "Error hablando con Gemini";
-            setGeminiError(msg);
-            toast.error(msg);
-          } finally {
-            setGeminiLoading(false);
-          }
-        })();
+
+        // Si al prellenar ya estamos por terminar, lanzamos Gemini
+        if (step >= 3) {
+          (async () => {
+            setGeminiError("");
+            setGeminiReply("");
+            setGeminiLoading(true);
+            try {
+              const messagesWithLast = messages.concat({ role: "user", content: text });
+              const finalPrompt = buildPlannerPromptFromWizard(messagesWithLast);
+              const reply = await askGemini(finalPrompt);
+              setGeminiReply(reply || "");
+            } catch (err) {
+              const msg = err?.message || "Error hablando con Gemini";
+              setGeminiError(msg);
+              toast.error(msg);
+            } finally {
+              setGeminiLoading(false);
+            }
+          })();
+        }
       } else {
         setInput(text);
       }
     };
     window.addEventListener("prefill-plan", onPrefill);
     return () => window.removeEventListener("prefill-plan", onPrefill);
-  }, [step, submitTurn, toast]);
+    // eslint-disable-next-line
+  }, [step, submitTurn, toast, messages]);
 
   const listRef = useRef(null);
   useEffect(() => {
@@ -188,10 +238,7 @@ export default function ChatPlanner() {
 
             {/* Chat */}
             <div className="md:col-span-3 bg-white rounded-2xl p-5 shadow-2xl border border-slate-200 relative h-[480px] flex flex-col overflow-hidden">
-              <div
-                ref={listRef}
-                className="space-y-3 flex-1 overflow-auto pr-1"
-              >
+              <div ref={listRef} className="space-y-3 flex-1 overflow-auto pr-1">
                 {messages.map((m, i) => (
                   <div
                     key={i}
@@ -223,7 +270,7 @@ export default function ChatPlanner() {
                   </div>
                 ))}
 
-                {/* Burbuja adicional para la respuesta de la Function (Gemini 2.5) */}
+                {/* Burbuja para la respuesta final de Gemini (solo al terminar el wizard) */}
                 {(geminiLoading || geminiReply || geminiError) && (
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs font-semibold">
@@ -236,9 +283,7 @@ export default function ChatPlanner() {
                         </span>
                       )}
                       {!geminiLoading && geminiError && (
-                        <span className="text-red-600">
-                          ⚠️ {geminiError}
-                        </span>
+                        <span className="text-red-600">⚠️ {geminiError}</span>
                       )}
                       {!geminiLoading && !geminiError && geminiReply && (
                         <ReactMarkdown>{geminiReply}</ReactMarkdown>
@@ -284,14 +329,7 @@ export default function ChatPlanner() {
                 {suggestions.map((s) => (
                   <button
                     key={s}
-                    onClick={() => {
-                      setInput(s);
-                      // dispara envío inmediato
-                      setTimeout(() => {
-                        const fakeEvent = { preventDefault() { } };
-                        handleSubmit(fakeEvent);
-                      }, 0);
-                    }}
+                    onClick={() => setInput(s)}
                     className="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
                     disabled={loadingPlan || geminiLoading}
                   >
