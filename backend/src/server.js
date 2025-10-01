@@ -1,10 +1,11 @@
-// src/server.js
+// backend/src/server.js
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import { GoogleGenerativeAI } from "@google/genai";
 
 // ==========================
-// Arranque / middlewares base
+// App base y configuración
 // ==========================
 const app = express();
 
@@ -15,7 +16,7 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false }));
 
 // ==========================
-// CORS (ajusta los orígenes a tu realidad)
+// CORS (ajusta tus dominios)
 // ==========================
 const allowedOrigins = new Set([
   "https://edvanceia.netlify.app",
@@ -48,9 +49,9 @@ app.get("/", (_req, res) => {
   res.status(200).json({ ok: true, name: "ai-edu-backend", health: "/healthz" });
 });
 
-// ====================================================
-// Utilidades para convertir texto "raro" en JSON válido
-// ====================================================
+// ==========================
+// Utils de normalización JSON
+// ==========================
 function safeParseJSON(text) {
   try {
     return [JSON.parse(text), null];
@@ -59,7 +60,6 @@ function safeParseJSON(text) {
   }
 }
 
-// Extrae bloque ```json ... ``` o ``` ... ```
 function extractJsonFence(text) {
   if (!text) return null;
   const m =
@@ -68,7 +68,6 @@ function extractJsonFence(text) {
   return m ? m[1].trim() : null;
 }
 
-// Toma desde el primer { hasta el último } para intentar aislar el objeto JSON
 function sliceFirstCurlyToLastCurly(text) {
   const first = text.indexOf("{");
   const last = text.lastIndexOf("}");
@@ -76,29 +75,16 @@ function sliceFirstCurlyToLastCurly(text) {
   return text.slice(first, last + 1).trim();
 }
 
-// Reparaciones suaves y no peligrosas
 function gentleRepairs(text) {
   if (!text) return text;
-
   let out = text.trim();
-
-  // Quita BOM si existe
   out = out.replace(/^\uFEFF/, "");
-
-  // Reemplaza comillas simples por dobles sólo en casos simples (keys y strings comunes)
-  // Nota: es una reparación heurística; si no corresponde, el parse fallará y seguiremos con otras estrategias
-  // Claves: 'key': -> "key":
   out = out.replace(/'(\w+?)'\s*:/g, '"$1":');
-  // Strings: : 'value' -> : "value"
   out = out.replace(/:\s*'([^']*)'/g, ': "$1"');
-
-  // Elimina comas finales antes de } o ]
   out = out.replace(/,\s*([}\]])/g, "$1");
-
   return out;
 }
 
-// Validación mínima de esquema de plan
 function validatePlanShape(obj) {
   if (!obj || typeof obj !== "object") return "payload no es un objeto";
   const must = ["objective", "weeks", "hoursPerWeek", "weeksPlan"];
@@ -106,109 +92,119 @@ function validatePlanShape(obj) {
     if (!(k in obj)) return `falta propiedad requerida: ${k}`;
   }
   if (!Array.isArray(obj.weeksPlan)) return "weeksPlan debe ser un arreglo";
-  return null; // ok
+  return null;
 }
 
-/**
- * Intenta convertir texto "AI" en JSON válido con varias estrategias:
- * 1) JSON.parse directo
- * 2) Extraer bloque entre ```json ... ```
- * 3) Tomar desde primer { hasta último } (cuando hay texto adicional)
- * 4) Reparaciones suaves (comillas simples, comas finales)
- * 5) Repetir parse tras reparaciones
- */
 function normalizeAIJSON(rawText) {
   if (!rawText || typeof rawText !== "string") {
     return { error: "AI devolvió cuerpo vacío o no-string" };
   }
 
-  // 1) Parse directo
   {
     const [dataDirect] = safeParseJSON(rawText);
     if (dataDirect) return { data: dataDirect, source: "direct" };
   }
 
-  // 2) Extraer bloque fence
   const fenced = extractJsonFence(rawText);
   if (fenced) {
-    const [dataFence] = safeParseJSON(fenced);
-    if (dataFence) return { data: dataFence, source: "fence" };
-
+    const [d1] = safeParseJSON(fenced);
+    if (d1) return { data: d1, source: "fence" };
     const repairedFence = gentleRepairs(fenced);
-    const [dataFenceRepaired] = safeParseJSON(repairedFence);
-    if (dataFenceRepaired) return { data: dataFenceRepaired, source: "fence+repair" };
+    const [d2] = safeParseJSON(repairedFence);
+    if (d2) return { data: d2, source: "fence+repair" };
   }
 
-  // 3) Cortar desde { ... } último
   const sliced = sliceFirstCurlyToLastCurly(rawText);
   if (sliced) {
-    const [dataSliced] = safeParseJSON(sliced);
-    if (dataSliced) return { data: dataSliced, source: "sliced" };
-
+    const [d3] = safeParseJSON(sliced);
+    if (d3) return { data: d3, source: "sliced" };
     const repairedSliced = gentleRepairs(sliced);
-    const [dataSlicedRepaired] = safeParseJSON(repairedSliced);
-    if (dataSlicedRepaired) return { data: dataSlicedRepaired, source: "sliced+repair" };
+    const [d4] = safeParseJSON(repairedSliced);
+    if (d4) return { data: d4, source: "sliced+repair" };
   }
 
-  // 4) Reparaciones suaves sobre el texto completo
   const repaired = gentleRepairs(rawText);
-  const [dataRepaired] = safeParseJSON(repaired);
-  if (dataRepaired) return { data: dataRepaired, source: "repair" };
+  const [d5] = safeParseJSON(repaired);
+  if (d5) return { data: d5, source: "repair" };
 
   return { error: "No se pudo convertir la respuesta de la IA en JSON.", raw: rawText };
 }
 
-// ====================================================
-// (Opcional) Generador simulado / proveedor real
-// Sustituye este bloque por tu integración con @google/genai u OpenAI
-// ====================================================
-async function callAIProvider(_input) {
-  // Si estás testeando, respeta MOCK_PLAN=1
+// ==========================
+// Proveedor IA (Gemini 2.5)
+// ==========================
+async function callAIProvider(input) {
   if (process.env.MOCK_PLAN === "1") {
     return JSON.stringify({
-      objective: "Aprender React",
-      level: "Inicial",
-      hoursPerWeek: 6,
-      weeks: 4,
-      weeksPlan: Array.from({ length: 4 }, (_, i) => ({
+      objective: input?.objective ?? "Objetivo",
+      level: input?.level ?? "No especificado",
+      hoursPerWeek: input?.hoursPerWeek ?? 6,
+      weeks: input?.weeks ?? 4,
+      weeksPlan: Array.from({ length: input?.weeks ?? 4 }, (_, i) => ({
         week: i + 1,
         goals: i === 0 ? ["Fundamentos"] : ["Profundización"],
         resources: [],
         tasks: [],
       })),
+      _source: "mock",
     });
   }
 
-  // TODO: Integra aquí tu llamada real a Gemini u OpenAI y devuelve TEXTO (no objeto)
-  // Ejemplo de texto con basura y bloque json (simulando mal formateo):
-  return `
-    Aquí está tu plan:
-    \`\`\`json
-    {
-      "objective": "Aprender React",
-      "level": "Inicial",
-      "hoursPerWeek": 6,
-      "weeks": 4,
-      "weeksPlan": [
-        { "week": 1, "goals": ["Fundamentos"], "resources": [], "tasks": [] },
-        { "week": 2, "goals": ["Componentes"], "resources": [], "tasks": [] },
-        { "week": 3, "goals": ["Estado y efectos"], "resources": [], "tasks": [] },
-        { "week": 4, "goals": ["Routing y deploy"], "resources": [], "tasks": [] }
-      ]
-    }
-    \`\`\`
-    ¿Algo más?
-  `;
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return JSON.stringify({ _providerError: "GEMINI_API_KEY no está configurada" });
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const modelId = "gemini-2.5-flash";
+
+  const schemaHint = `
+Devuelve **solo JSON válido** sin texto extra. Esquema:
+{
+  "objective": string,
+  "level": string,
+  "hoursPerWeek": number,
+  "weeks": number,
+  "weeksPlan": [
+    { "week": number, "goals": string[], "resources": any[], "tasks": any[] }
+  ]
+}
+  `.trim();
+
+  const userPrompt = `
+Genera un plan de estudio según este input (responde en español neutro):
+${JSON.stringify(input, null, 2)}
+
+${schemaHint}
+`.trim();
+
+  try {
+    const model = genAI.getGenerativeModel({ model: modelId });
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: userPrompt }]}],
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.2,
+      },
+    });
+
+    const text = result?.response?.text?.() ?? "";
+    if (!text) throw new Error("Gemini devolvió respuesta vacía");
+    return text;
+  } catch (err) {
+    return JSON.stringify({
+      _providerError: `Gemini error: ${err?.message || String(err)}`,
+    });
+  }
 }
 
 // ==========================
-// Endpoint robusto: /plan
+// Endpoint /plan
 // ==========================
 app.post("/plan", async (req, res) => {
   try {
     const { objective, level, hoursPerWeek, weeks } = req.body || {};
 
-    // Validaciones mínimas de entrada
     if (!objective) return res.status(400).json({ error: "objective es requerido" });
     const hpw = Number(hoursPerWeek);
     const wks = Number(weeks);
@@ -219,25 +215,19 @@ app.post("/plan", async (req, res) => {
       return res.status(400).json({ error: "weeks debe ser número > 0" });
     }
 
-    // 1) Llama a tu proveedor (retorna TEXTO)
     const aiRawText = await callAIProvider({ objective, level, hoursPerWeek: hpw, weeks: wks });
 
-    // 2) Normaliza a JSON sí o sí
     const { data, error, source, raw } = normalizeAIJSON(aiRawText);
     if (error) {
-      // No logramos convertir → responde 502 con detalle, siempre JSON
       return res.status(502).json({
         error: "AI invalid JSON",
         detail: error,
-        note: "No se pudo convertir la respuesta de la IA a JSON",
         sample: raw?.slice(0, 4000) || null,
       });
     }
 
-    // 3) Validación mínima del shape; si falta algo, completamos con valores del input
     const shapeErr = validatePlanShape(data);
     if (shapeErr) {
-      // intentamos “sanear” con el input del usuario para que el frontend no se caiga
       const fixed = {
         objective,
         level: data?.level ?? level ?? "No especificado",
@@ -250,7 +240,6 @@ app.post("/plan", async (req, res) => {
       return res.status(200).json(fixed);
     }
 
-    // 4) Todo bien → devolvemos el plan normalizado + metadatos de trazabilidad opcionales
     return res.status(200).json({
       ...data,
       _source: source,
@@ -281,6 +270,7 @@ const HOST = "0.0.0.0";
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`[boot] NODE_ENV=${process.env.NODE_ENV || "development"}`);
+  console.log(`[boot] MODE=${process.env.MOCK_PLAN === "1" ? "MOCK" : "AI"}`);
   console.log(`[boot] Listening on http://${HOST}:${PORT}`);
   console.log("[boot] Health check at GET /healthz -> 200 ok");
 });
