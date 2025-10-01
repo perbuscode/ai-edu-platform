@@ -1,24 +1,17 @@
 // frontend/src/services/geminiClient.js
-const BASE = "/.netlify/functions";
+import { postJSON } from "../utils/api";
 
 /**
- * Envía un prompt a la función Netlify "gemini"
- * @param {string} prompt
- * @returns {Promise<string>}
+ * Envía un "prompt" al backend en Render para que genere un plan con Gemini.
+ * @param {string} prompt Texto que se usará como objetivo del plan
+ * @returns {Promise<object>} Plan de estudio en JSON
  */
 export async function askGemini(prompt) {
-  const res = await fetch(`${BASE}/gemini`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+  // Aquí mandamos el prompt como "objective"
+  return postJSON("/plan", {
+    objective: prompt,
+    level: "Inicial",
+    hoursPerWeek: 6,
+    weeks: 4,
   });
-
-  if (!res.ok) {
-    const msg = await res.text().catch(() => res.statusText);
-    throw new Error(`Gemini ${res.status}: ${msg}`);
-  }
-
-  const data = await res.json();
-  if (data?.text) return data.text;
-  throw new Error("Respuesta de Gemini inválida");
 }
