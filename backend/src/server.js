@@ -1,218 +1,300 @@
-// backend/src/server.js
+// src/server.js
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { getCoursesData, getMetricsData, getSkillsMapData } from "./dashboardData.js";
-import { getFirestoreSafe, verifyIdTokenOptional } from "./firebaseAdmin.js";
-import { getAiProvider } from "./ai-providers/index.js";
 
+// ==========================
+// Arranque / middlewares base
+// ==========================
 const app = express();
-const PORT = process.env.PORT || 5050;
 
-// --- Sanitización básica de strings ---
-function toSafeString(v, { max = 200 } = {}) {
-  if (typeof v !== "string") return "";
-  // trim + recortar longitud + quitar caracteres de control no imprimibles
-  const trimmed = v.trim().slice(0, max);
-  return trimmed.replace(/[\u0000-\u001F\u007F]/g, "");
-}
+app.set("trust proxy", 1);
+app.disable("x-powered-by");
 
-// Configuración de CORS más explícita y segura para producción
-const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000").split(",");
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false }));
+
+// ==========================
+// CORS (ajusta los orígenes a tu realidad)
+// ==========================
+const allowedOrigins = new Set([
+  "https://edvanceia.netlify.app",
+  "https://edvanceia.com",
+  "https://www.edvanceia.com",
+  "http://localhost:8888",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:5174",
+]);
+
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
+  origin(origin, cb) {
+    if (!origin || allowedOrigins.has(origin)) return cb(null, true);
+    return cb(new Error(`CORS bloqueado para origen: ${origin}`));
   },
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
 
+app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 
-// Cabeceras de seguridad básicas (ajusta según necesidades del frontend)
-app.use((req, res, next) => {
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
-  next();
+// ==========================
+// Health
+// ==========================
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+app.get("/", (_req, res) => {
+  res.status(200).json({ ok: true, name: "ai-edu-backend", health: "/healthz" });
 });
 
-app.use(express.json({ limit: "1mb" }));
-
-app.get("/health", (req, res) => {
-  res.json({ ok: true, uptime: process.uptime() });
-});
-
-app.get("/api/metrics", async (req, res) => {
+// ====================================================
+// Utilidades para convertir texto "raro" en JSON válido
+// ====================================================
+function safeParseJSON(text) {
   try {
-    const metrics = await getMetricsData();
-    res.json(metrics);
-  } catch (error) {
-    console.error("[dashboard] metrics error", error);
-    res.status(500).json({ error: "No se pudieron obtener las métricas" });
+    return [JSON.parse(text), null];
+  } catch (e) {
+    return [null, e];
   }
-});
+}
 
-app.get("/api/courses", async (req, res) => {
-  try {
-    const courses = await getCoursesData();
-    res.json(courses);
-  } catch (error) {
-    console.error("[dashboard] courses error", error);
-    res.status(500).json({ error: "No se pudieron obtener los cursos" });
+// Extrae bloque ```json ... ``` o ``` ... ```
+function extractJsonFence(text) {
+  if (!text) return null;
+  const m =
+    text.match(/```json\s*([\s\S]*?)```/i) ||
+    text.match(/```\s*([\s\S]*?)```/i);
+  return m ? m[1].trim() : null;
+}
+
+// Toma desde el primer { hasta el último } para intentar aislar el objeto JSON
+function sliceFirstCurlyToLastCurly(text) {
+  const first = text.indexOf("{");
+  const last = text.lastIndexOf("}");
+  if (first === -1 || last === -1 || last <= first) return null;
+  return text.slice(first, last + 1).trim();
+}
+
+// Reparaciones suaves y no peligrosas
+function gentleRepairs(text) {
+  if (!text) return text;
+
+  let out = text.trim();
+
+  // Quita BOM si existe
+  out = out.replace(/^\uFEFF/, "");
+
+  // Reemplaza comillas simples por dobles sólo en casos simples (keys y strings comunes)
+  // Nota: es una reparación heurística; si no corresponde, el parse fallará y seguiremos con otras estrategias
+  // Claves: 'key': -> "key":
+  out = out.replace(/'(\w+?)'\s*:/g, '"$1":');
+  // Strings: : 'value' -> : "value"
+  out = out.replace(/:\s*'([^']*)'/g, ': "$1"');
+
+  // Elimina comas finales antes de } o ]
+  out = out.replace(/,\s*([}\]])/g, "$1");
+
+  return out;
+}
+
+// Validación mínima de esquema de plan
+function validatePlanShape(obj) {
+  if (!obj || typeof obj !== "object") return "payload no es un objeto";
+  const must = ["objective", "weeks", "hoursPerWeek", "weeksPlan"];
+  for (const k of must) {
+    if (!(k in obj)) return `falta propiedad requerida: ${k}`;
   }
-});
+  if (!Array.isArray(obj.weeksPlan)) return "weeksPlan debe ser un arreglo";
+  return null; // ok
+}
 
-app.get("/api/skills-map", async (req, res) => {
-  try {
-    const skills = await getSkillsMapData();
-    res.json(skills);
-  } catch (error) {
-    console.error("[dashboard] skills map error", error);
-    res.status(500).json({ error: "No se pudo obtener el mapa de habilidades" });
+/**
+ * Intenta convertir texto "AI" en JSON válido con varias estrategias:
+ * 1) JSON.parse directo
+ * 2) Extraer bloque entre ```json ... ```
+ * 3) Tomar desde primer { hasta último } (cuando hay texto adicional)
+ * 4) Reparaciones suaves (comillas simples, comas finales)
+ * 5) Repetir parse tras reparaciones
+ */
+function normalizeAIJSON(rawText) {
+  if (!rawText || typeof rawText !== "string") {
+    return { error: "AI devolvió cuerpo vacío o no-string" };
   }
-});
 
+  // 1) Parse directo
+  {
+    const [dataDirect] = safeParseJSON(rawText);
+    if (dataDirect) return { data: dataDirect, source: "direct" };
+  }
+
+  // 2) Extraer bloque fence
+  const fenced = extractJsonFence(rawText);
+  if (fenced) {
+    const [dataFence] = safeParseJSON(fenced);
+    if (dataFence) return { data: dataFence, source: "fence" };
+
+    const repairedFence = gentleRepairs(fenced);
+    const [dataFenceRepaired] = safeParseJSON(repairedFence);
+    if (dataFenceRepaired) return { data: dataFenceRepaired, source: "fence+repair" };
+  }
+
+  // 3) Cortar desde { ... } último
+  const sliced = sliceFirstCurlyToLastCurly(rawText);
+  if (sliced) {
+    const [dataSliced] = safeParseJSON(sliced);
+    if (dataSliced) return { data: dataSliced, source: "sliced" };
+
+    const repairedSliced = gentleRepairs(sliced);
+    const [dataSlicedRepaired] = safeParseJSON(repairedSliced);
+    if (dataSlicedRepaired) return { data: dataSlicedRepaired, source: "sliced+repair" };
+  }
+
+  // 4) Reparaciones suaves sobre el texto completo
+  const repaired = gentleRepairs(rawText);
+  const [dataRepaired] = safeParseJSON(repaired);
+  if (dataRepaired) return { data: dataRepaired, source: "repair" };
+
+  return { error: "No se pudo convertir la respuesta de la IA en JSON.", raw: rawText };
+}
+
+// ====================================================
+// (Opcional) Generador simulado / proveedor real
+// Sustituye este bloque por tu integración con @google/genai u OpenAI
+// ====================================================
+async function callAIProvider(_input) {
+  // Si estás testeando, respeta MOCK_PLAN=1
+  if (process.env.MOCK_PLAN === "1") {
+    return JSON.stringify({
+      objective: "Aprender React",
+      level: "Inicial",
+      hoursPerWeek: 6,
+      weeks: 4,
+      weeksPlan: Array.from({ length: 4 }, (_, i) => ({
+        week: i + 1,
+        goals: i === 0 ? ["Fundamentos"] : ["Profundización"],
+        resources: [],
+        tasks: [],
+      })),
+    });
+  }
+
+  // TODO: Integra aquí tu llamada real a Gemini u OpenAI y devuelve TEXTO (no objeto)
+  // Ejemplo de texto con basura y bloque json (simulando mal formateo):
+  return `
+    Aquí está tu plan:
+    \`\`\`json
+    {
+      "objective": "Aprender React",
+      "level": "Inicial",
+      "hoursPerWeek": 6,
+      "weeks": 4,
+      "weeksPlan": [
+        { "week": 1, "goals": ["Fundamentos"], "resources": [], "tasks": [] },
+        { "week": 2, "goals": ["Componentes"], "resources": [], "tasks": [] },
+        { "week": 3, "goals": ["Estado y efectos"], "resources": [], "tasks": [] },
+        { "week": 4, "goals": ["Routing y deploy"], "resources": [], "tasks": [] }
+      ]
+    }
+    \`\`\`
+    ¿Algo más?
+  `;
+}
+
+// ==========================
+// Endpoint robusto: /plan
+// ==========================
 app.post("/plan", async (req, res) => {
   try {
     const { objective, level, hoursPerWeek, weeks } = req.body || {};
 
-    // Sanitizar strings (evita espacios de más y caracteres raros)
-    const objectiveSafe = toSafeString(objective, { max: 300 });
-    const levelSafe = toSafeString(level, { max: 100 });
-
-    // Validación explícita del payload
-    const problems = [];
-    if (!objectiveSafe) problems.push("objective (string no vacío)");
-    if (!levelSafe) problems.push("level (string no vacío)");
+    // Validaciones mínimas de entrada
+    if (!objective) return res.status(400).json({ error: "objective es requerido" });
     const hpw = Number(hoursPerWeek);
-    if (!Number.isFinite(hpw) || hpw <= 0) problems.push("hoursPerWeek (número > 0)");
     const wks = Number(weeks);
-    if (!Number.isFinite(wks) || wks <= 0 || !Number.isInteger(wks))
-      problems.push("weeks (entero > 0)");
-
-    // (Opcional) límites sanos:
-    // if (hpw > 80) problems.push("hoursPerWeek (máx 80)");
-    // if (wks > 52) problems.push("weeks (máx 52)");
-
-    if (problems.length) {
-      const errorId = Date.now().toString(36);
-      console.warn(`[POST /plan][${errorId}] Validación fallida: ${problems.join(", ")}`);
-      return res.status(400).json({ error: `Payload inválido: ${problems.join("; ")}`, errorId });
+    if (!Number.isFinite(hpw) || hpw <= 0) {
+      return res.status(400).json({ error: "hoursPerWeek debe ser número > 0" });
+    }
+    if (!Number.isFinite(wks) || wks <= 0) {
+      return res.status(400).json({ error: "weeks debe ser número > 0" });
     }
 
-    let plan;
-    if (
-      process.env.MOCK_PLAN === "1" ||
-      (req.query && req.query.mock === "1") ||
-      req.headers["mock"] === "1" ||
-      req.headers["x-mock"] === "1"
-    ) {
-      console.info("[POST /plan] mock solicitado");
-      plan = {
-        title: `${objectiveSafe} (Nivel ${levelSafe}) - ${wks} semanas`,
-        goal: objectiveSafe,
-        level: levelSafe,
-        hoursPerWeek: hpw,
-        durationWeeks: wks,
-        blocks: [
-          {
-            title: "Fundamentos",
-            bullets: ["Intro", "Herramientas", "Buenas prácticas"],
-            project: "Proyecto 1",
-            role: "Jr.",
-          },
-          {
-            title: "Profundización",
-            bullets: ["Conceptos clave", "Práctica guiada"],
-            project: "Proyecto 2",
-            role: "Mid",
-          },
-        ],
-        rubric: [
-          { criterion: "Comprensión de conceptos", level: "A/B/C" },
-          { criterion: "Aplicación práctica", level: "A/B/C" },
-        ],
+    // 1) Llama a tu proveedor (retorna TEXTO)
+    const aiRawText = await callAIProvider({ objective, level, hoursPerWeek: hpw, weeks: wks });
+
+    // 2) Normaliza a JSON sí o sí
+    const { data, error, source, raw } = normalizeAIJSON(aiRawText);
+    if (error) {
+      // No logramos convertir → responde 502 con detalle, siempre JSON
+      return res.status(502).json({
+        error: "AI invalid JSON",
+        detail: error,
+        note: "No se pudo convertir la respuesta de la IA a JSON",
+        sample: raw?.slice(0, 4000) || null,
+      });
+    }
+
+    // 3) Validación mínima del shape; si falta algo, completamos con valores del input
+    const shapeErr = validatePlanShape(data);
+    if (shapeErr) {
+      // intentamos “sanear” con el input del usuario para que el frontend no se caiga
+      const fixed = {
+        objective,
+        level: data?.level ?? level ?? "No especificado",
+        hoursPerWeek: data?.hoursPerWeek ?? hpw,
+        weeks: data?.weeks ?? wks,
+        weeksPlan: Array.isArray(data?.weeksPlan) ? data.weeksPlan : [],
+        _source: source || "unknown",
+        _note: `Esquema reparado: ${shapeErr}`,
       };
-    } else {
-      try {
-        const { generateStudyPlan } = getAiProvider();
-        plan = await generateStudyPlan({
-          input: { objective: objectiveSafe, level: levelSafe, hoursPerWeek: hpw, weeks: wks },
-        });
-      } catch (error) {
-        const errorId = Date.now().toString(36);
-        console.error(`[POST /plan][${errorId}] Fallo al generar plan con el proveedor de IA`, {
-          message: error?.message || String(error),
-          httpStatus: error.status || error.statusCode,
-        });
-        throw error;
-      }
+      return res.status(200).json(fixed);
     }
 
-    // Intento de guardar el plan en Firestore si hay usuario autenticado
-    const authz = req.headers["authorization"];
-    const decoded = await verifyIdTokenOptional(authz);
-    if (decoded?.uid) {
-      const db = getFirestoreSafe();
-      if (db) {
-        const uid = decoded.uid;
-        const ref = db.collection("users").doc(uid).collection("plans").doc();
-        const stored = {
-          plan,
-          objective: objectiveSafe,
-          level: levelSafe,
-          hoursPerWeek: hpw,
-          weeks: wks,
-          createdAt: new Date().toISOString(),
-        };
-        await ref.set(stored);
-        plan._id = ref.id;
-      }
-    }
-
-    res.json({ plan });
-  } catch (e) {
-    const errorId = Date.now().toString(36);
-    const httpStatus =
-      e?.status ?? e?.statusCode ?? e?.response?.status ?? e?.response?.statusCode ?? 500;
-
-    // Log en servidor
-    console.error(`[POST /plan][${errorId}] Error al generar plan`, {
-      name: e?.name || "Error",
-      message: e?.message || String(e),
-      httpStatus,
-      details: e?.details || e?.response?.data,
-      stack: e?.stack,
+    // 4) Todo bien → devolvemos el plan normalizado + metadatos de trazabilidad opcionales
+    return res.status(200).json({
+      ...data,
+      _source: source,
     });
-
-    // Respuesta base al cliente
-    const payload = { error: "No se pudo generar el plan", errorId };
-
-    // En desarrollo, expone info útil
-    if (process.env.NODE_ENV !== "production") {
-      payload.debug = {
-        provider: process.env.AI_PROVIDER,
-        model: process.env.GEMINI_MODEL,
-        status: httpStatus,
-        name: e?.name,
-        message: e?.message,
-        details: e?.details || e?.response?.data || null,
-      };
-    }
-
-    res.status(httpStatus).json(payload);
+  } catch (err) {
+    console.error("[/plan] Uncaught error:", err);
+    return res.status(500).json({ error: "Internal error generating plan" });
   }
 });
 
-// Export app for testing
-export default app;
+// ==========================
+// Manejo de errores y 404
+// ==========================
+app.use((err, _req, res, next) => {
+  if (err && /CORS bloqueado/.test(String(err.message))) {
+    return res.status(403).json({ error: "CORS origin no permitido" });
+  }
+  return next(err);
+});
 
-if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () => {
-    console.log(`[backend] Escuchando en http://localhost:${PORT}`);
+app.use((_req, res) => res.status(404).json({ error: "Not found" }));
+
+// ==========================
+// Listen / Shutdown
+// ==========================
+const PORT = process.env.PORT || 5050;
+const HOST = "0.0.0.0";
+
+const server = app.listen(PORT, HOST, () => {
+  console.log(`[boot] NODE_ENV=${process.env.NODE_ENV || "development"}`);
+  console.log(`[boot] Listening on http://${HOST}:${PORT}`);
+  console.log("[boot] Health check at GET /healthz -> 200 ok");
+});
+
+function shutdown(signal) {
+  console.log(`[boot] Received ${signal}. Closing server...`);
+  server.close(() => {
+    console.log("[boot] Server closed. Bye!");
+    process.exit(0);
   });
+  setTimeout(() => process.exit(1), 10_000).unref();
 }
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+export default app;

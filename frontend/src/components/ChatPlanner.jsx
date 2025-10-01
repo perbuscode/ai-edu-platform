@@ -122,7 +122,9 @@ export default function ChatPlanner() {
           // Aquí lo dejamos en el chat como burbuja enriquecida.
         } catch (err) {
           console.error("Fallback Gemini error:", err);
-          setGeminiError(err?.message || "No se pudo generar el plan con Gemini.");
+          setGeminiError(
+            err?.message || "No se pudo generar el plan con Gemini."
+          );
         } finally {
           setGeminiLoading(false);
         }
@@ -226,7 +228,10 @@ export default function ChatPlanner() {
 
             {/* Chat */}
             <div className="md:col-span-3 bg-white rounded-2xl p-5 shadow-2xl border border-slate-200 relative h-[480px] flex flex-col overflow-hidden">
-              <div ref={listRef} className="space-y-3 flex-1 overflow-auto pr-1">
+              <div
+                ref={listRef}
+                className="space-y-3 flex-1 overflow-auto pr-1"
+              >
                 {messages.map((m, i) => (
                   <div
                     key={i}
