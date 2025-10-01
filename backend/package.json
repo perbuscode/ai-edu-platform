@@ -10,7 +10,7 @@
     "test": "cross-env MOCK_PLAN=1 NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "dependencies": {
-    "@google/genai": "^1.21.0",
+    "@google/generative-ai": "^0.20.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.19.2",
