@@ -2,7 +2,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { GoogleGenerativeAI } from "@google/genai";
+// 👉 Paquete que tienes instalado según tu package.json:
+import { GoogleAI } from "@google/genai";
 
 // ==========================
 // App base y configuración
@@ -42,9 +43,17 @@ app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 
 // ==========================
-// Health
+// Health + Diagnóstico
 // ==========================
 app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+
+app.get("/__diag", (_req, res) => {
+  res.json({
+    mode: process.env.MOCK_PLAN === "1" ? "MOCK" : "AI",
+    hasGeminiKey: !!process.env.GEMINI_API_KEY,
+  });
+});
+
 app.get("/", (_req, res) => {
   res.status(200).json({ ok: true, name: "ai-edu-backend", health: "/healthz" });
 });
@@ -53,11 +62,8 @@ app.get("/", (_req, res) => {
 // Utils de normalización JSON
 // ==========================
 function safeParseJSON(text) {
-  try {
-    return [JSON.parse(text), null];
-  } catch (e) {
-    return [null, e];
-  }
+  try { return [JSON.parse(text), null]; }
+  catch (e) { return [null, e]; }
 }
 
 function extractJsonFence(text) {
@@ -88,9 +94,7 @@ function gentleRepairs(text) {
 function validatePlanShape(obj) {
   if (!obj || typeof obj !== "object") return "payload no es un objeto";
   const must = ["objective", "weeks", "hoursPerWeek", "weeksPlan"];
-  for (const k of must) {
-    if (!(k in obj)) return `falta propiedad requerida: ${k}`;
-  }
+  for (const k of must) if (!(k in obj)) return `falta propiedad requerida: ${k}`;
   if (!Array.isArray(obj.weeksPlan)) return "weeksPlan debe ser un arreglo";
   return null;
 }
@@ -99,12 +103,10 @@ function normalizeAIJSON(rawText) {
   if (!rawText || typeof rawText !== "string") {
     return { error: "AI devolvió cuerpo vacío o no-string" };
   }
-
   {
-    const [dataDirect] = safeParseJSON(rawText);
-    if (dataDirect) return { data: dataDirect, source: "direct" };
+    const [d] = safeParseJSON(rawText);
+    if (d) return { data: d, source: "direct" };
   }
-
   const fenced = extractJsonFence(rawText);
   if (fenced) {
     const [d1] = safeParseJSON(fenced);
@@ -113,7 +115,6 @@ function normalizeAIJSON(rawText) {
     const [d2] = safeParseJSON(repairedFence);
     if (d2) return { data: d2, source: "fence+repair" };
   }
-
   const sliced = sliceFirstCurlyToLastCurly(rawText);
   if (sliced) {
     const [d3] = safeParseJSON(sliced);
@@ -122,16 +123,14 @@ function normalizeAIJSON(rawText) {
     const [d4] = safeParseJSON(repairedSliced);
     if (d4) return { data: d4, source: "sliced+repair" };
   }
-
   const repaired = gentleRepairs(rawText);
   const [d5] = safeParseJSON(repaired);
   if (d5) return { data: d5, source: "repair" };
-
   return { error: "No se pudo convertir la respuesta de la IA en JSON.", raw: rawText };
 }
 
 // ==========================
-// Proveedor IA (Gemini 2.5)
+// Proveedor IA (Gemini 2.5 con @google/genai)
 // ==========================
 async function callAIProvider(input) {
   if (process.env.MOCK_PLAN === "1") {
@@ -155,7 +154,8 @@ async function callAIProvider(input) {
     return JSON.stringify({ _providerError: "GEMINI_API_KEY no está configurada" });
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
+  // 👉 Con @google/genai la clase es GoogleAI y recibe objeto con apiKey
+  const genAI = new GoogleAI({ apiKey });
   const modelId = "gemini-2.5-flash";
 
   const schemaHint = `
@@ -181,13 +181,13 @@ ${schemaHint}
   try {
     const model = genAI.getGenerativeModel({ model: modelId });
     const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: userPrompt }]}],
+      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.2,
       },
     });
-
+    // La librería expone .response.text()
     const text = result?.response?.text?.() ?? "";
     if (!text) throw new Error("Gemini devolvió respuesta vacía");
     return text;
@@ -204,8 +204,8 @@ ${schemaHint}
 app.post("/plan", async (req, res) => {
   try {
     const { objective, level, hoursPerWeek, weeks } = req.body || {};
-
     if (!objective) return res.status(400).json({ error: "objective es requerido" });
+
     const hpw = Number(hoursPerWeek);
     const wks = Number(weeks);
     if (!Number.isFinite(hpw) || hpw <= 0) {
@@ -240,10 +240,7 @@ app.post("/plan", async (req, res) => {
       return res.status(200).json(fixed);
     }
 
-    return res.status(200).json({
-      ...data,
-      _source: source,
-    });
+    return res.status(200).json({ ...data, _source: source });
   } catch (err) {
     console.error("[/plan] Uncaught error:", err);
     return res.status(500).json({ error: "Internal error generating plan" });
