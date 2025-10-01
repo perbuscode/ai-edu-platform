@@ -7,25 +7,30 @@ import { postJSON } from "../utils/api";
 
 /**
  * Genera el plan (llama a POST /plan en tu backend).
- * Mantengo esta función por si ya la usas en alguna parte.
+ * Puedes ajustar timeoutMs si lo necesitas (por defecto 120s).
  */
-export async function generatePlan(payload) {
-  // El postJSON ya concatena BASE + "/plan"
-  return postJSON("/plan", payload);
+export async function generatePlan(
+  payload,
+  { timeoutMs = 120000, retries = 0, allowAbort = false } = {}
+) {
+  // postJSON concatena BASE + path y soporta opciones { timeoutMs, retries, allowAbort }
+  return postJSON("/plan", payload, { timeoutMs, retries, allowAbort });
 }
 
 /**
  * saveStudyPlan: algunos componentes la importan.
  * Por ahora hace lo mismo que generatePlan y guarda una copia en localStorage.
- * Si luego agregas un endpoint real para persistir, cambia aquí.
+ * Si luego agregas un endpoint real de persistencia, cambia aquí.
  */
-export async function saveStudyPlan({ objective, level, hoursPerWeek, weeks }) {
-  const plan = await postJSON("/plan", {
-    objective,
-    level,
-    hoursPerWeek,
-    weeks,
-  });
+export async function saveStudyPlan(
+  { objective, level, hoursPerWeek, weeks },
+  { timeoutMs = 120000, retries = 0, allowAbort = false } = {}
+) {
+  const plan = await postJSON(
+    "/plan",
+    { objective, level, hoursPerWeek, weeks },
+    { timeoutMs, retries, allowAbort }
+  );
 
   try {
     localStorage.setItem("lastStudyPlan", JSON.stringify(plan));
