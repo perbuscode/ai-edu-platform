@@ -14,8 +14,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.19.2",
-    "firebase-admin": "^12.6.0",
-    "openai": "^4.57.0"
+    "firebase-admin": "^12.6.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
