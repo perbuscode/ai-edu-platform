@@ -18,7 +18,7 @@ const allowedOrigins = new Set([
   "http://localhost:8888",
   "http://localhost:5173",
   "http://localhost:3000",
-  "http://localhost:5174"
+  "http://localhost:5174",
 ]);
 const corsOptions = {
   origin(origin, cb) {
@@ -27,7 +27,7 @@ const corsOptions = {
   },
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
+  credentials: true,
 };
 app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
@@ -37,7 +37,8 @@ app.get("/healthz", (_req, res) => res.status(200).send("ok"));
 app.get("/__diag", (_req, res) => {
   res.json({
     mode: process.env.MOCK_PLAN === "1" ? "MOCK" : "AI",
-    hasGeminiKey: !!process.env.GEMINI_API_KEY
+    hasGeminiKey: !!process.env.GEMINI_API_KEY,
+    model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
   });
 });
 app.get("/", (_req, res) => {
@@ -65,13 +66,6 @@ function gentleRepairs(text) {
   out = out.replace(/,\s*([}\]])/g, "$1");
   return out;
 }
-function validatePlanShape(obj) {
-  if (!obj || typeof obj !== "object") return "payload no es un objeto";
-  const must = ["objective", "weeks", "hoursPerWeek", "weeksPlan"];
-  for (const k of must) if (!(k in obj)) return `falta propiedad requerida: ${k}`;
-  if (!Array.isArray(obj.weeksPlan)) return "weeksPlan debe ser un arreglo";
-  return null;
-}
 function normalizeAIJSON(rawText) {
   if (!rawText || typeof rawText !== "string") return { error: "AI devolvió cuerpo vacío o no-string" };
   { const [d] = safeParseJSON(rawText); if (d) return { data: d, source: "direct" }; }
@@ -89,18 +83,150 @@ function normalizeAIJSON(rawText) {
   return { error: "No se pudo convertir la respuesta de la IA en JSON.", raw: rawText };
 }
 
-// --- Proveedor IA (Gemini 2.5 con @google/generative-ai) ---
-async function callAIProvider(input) {
-  if (process.env.MOCK_PLAN === "1") {
-    return JSON.stringify({
-      objective: input?.objective ?? "Objetivo",
-      level: input?.level ?? "No especificado",
-      hoursPerWeek: input?.hoursPerWeek ?? 6,
-      weeks: input?.weeks ?? 4,
-      weeksPlan: Array.from({ length: input?.weeks ?? 4 }, (_, i) => ({
-        week: i + 1, goals: i === 0 ? ["Fundamentos"] : ["Profundización"], resources: [], tasks: []
+// --- Enriquecimiento y compatibilidad ---
+function ensureArray(x) { return Array.isArray(x) ? x : []; }
+function toNumber(x, def = 0) { const n = Number(x); return Number.isFinite(n) ? n : def; }
+
+/**
+ * Si llega el "esquema rico", derivamos weeksPlan para compatibilidad.
+ * Si llega el "esquema simple", lo enriquecemos con defaults.
+ */
+function unifyPlanShape(raw) {
+  if (!raw || typeof raw !== "object") {
+    return { error: "payload no es un objeto" };
+  }
+
+  // Detecta si es "rico" (blocks/summary/skills/salary)
+  const isRich =
+    "blocks" in raw ||
+    "summary" in raw ||
+    "skills" in raw ||
+    "salary" in raw ||
+    "roles" in raw ||
+    "rubric" in raw;
+
+  if (isRich) {
+    const rich = {
+      title: typeof raw.title === "string" ? raw.title : `Plan: ${raw.objective || "Objetivo"}`,
+      goal: typeof raw.goal === "string" ? raw.goal : (raw.objective || "Objetivo"),
+      level: typeof raw.level === "string" ? raw.level : "No especificado",
+      hoursPerWeek: toNumber(raw.hoursPerWeek, 6),
+      durationWeeks: toNumber(raw.durationWeeks ?? raw.weeks, 4),
+      blocks: ensureArray(raw.blocks).map((b, i) => ({
+        title: typeof b.title === "string" ? b.title : `Bloque ${i + 1}`,
+        bullets: ensureArray(b.bullets),
+        project: typeof b.project === "string" ? b.project : "",
+        role: typeof b.role === "string" ? b.role : "",
+        lessonHours: ensureArray(b.lessonHours).map(v => toNumber(v, 0)),
+        projectHours: toNumber(b.projectHours, 0),
       })),
-      _source: "mock"
+      rubric: ensureArray(raw.rubric),
+      skills: ensureArray(raw.skills),
+      roles: ensureArray(raw.roles),
+      salary: ensureArray(raw.salary),
+      summary: typeof raw.summary === "string"
+        ? raw.summary
+        : `Plan de ${toNumber(raw.durationWeeks ?? raw.weeks, 4)} semanas a ${toNumber(raw.hoursPerWeek, 6)} h/semana.`,
+    };
+
+    // Deriva weeksPlan para compat con UI antigua
+    const weeksPlan = rich.blocks.map((blk, idx) => ({
+      week: idx + 1,
+      goals: ensureArray(blk.bullets),
+      resources: [], // el modelo puede no proveer, queda listo para futuro
+      tasks: [],     // idem
+    }));
+
+    return {
+      objective: rich.goal,
+      level: rich.level,
+      hoursPerWeek: rich.hoursPerWeek,
+      weeks: rich.durationWeeks,
+      weeksPlan,
+      // Conserva todo lo rico:
+      title: rich.title,
+      goal: rich.goal,
+      durationWeeks: rich.durationWeeks,
+      blocks: rich.blocks,
+      rubric: rich.rubric,
+      skills: rich.skills,
+      roles: rich.roles,
+      salary: rich.salary,
+      summary: rich.summary,
+    };
+  }
+
+  // Esquema simple -> enriquecer con defaults
+  const simple = {
+    objective: raw.objective || "Objetivo",
+    level: raw.level || "No especificado",
+    hoursPerWeek: toNumber(raw.hoursPerWeek, 6),
+    weeks: toNumber(raw.weeks ?? raw.durationWeeks, 4),
+    weeksPlan: ensureArray(raw.weeksPlan).map((w, i) => ({
+      week: toNumber(w.week, i + 1),
+      goals: ensureArray(w.goals),
+      resources: ensureArray(w.resources),
+      tasks: ensureArray(w.tasks),
+    })),
+  };
+
+  // Genera un rico mínimo desde el simple (para UI nueva)
+  const blocks = simple.weeksPlan.map((w) => ({
+    title: `Semana ${w.week}`,
+    bullets: ensureArray(w.goals),
+    project: "",
+    role: "",
+    lessonHours: new Array(ensureArray(w.goals).length).fill(0),
+    projectHours: 0,
+  }));
+
+  return {
+    ...simple,
+    title: `Plan: ${simple.objective}`,
+    goal: simple.objective,
+    durationWeeks: simple.weeks,
+    blocks,
+    rubric: [],
+    skills: [],
+    roles: [],
+    salary: [],
+    summary: `Plan de ${simple.weeks} semanas a ${simple.hoursPerWeek} h/semana.`,
+  };
+}
+
+// --- Proveedor IA (Gemini 2.5 con @google/generative-ai) ---
+async function callAIProviderRich(input) {
+  if (process.env.MOCK_PLAN === "1") {
+    // Mock enriquecido
+    const weeks = toNumber(input?.weeks, 4);
+    const hoursPerWeek = toNumber(input?.hoursPerWeek, 6);
+    const blocks = Array.from({ length: weeks }, (_, i) => ({
+      title: `Semana ${i + 1}`,
+      bullets: i === 0
+        ? ["Fundamentos del tema", "Instalación y setup", "Primeros ejercicios"]
+        : ["Práctica guiada", "Ejercicios aplicados", "Pequeño reto"],
+      project: i === weeks - 1 ? "Proyecto integrador" : "",
+      role: i === weeks - 1 ? "Presentación final" : "",
+      lessonHours: [2, 2, 2],
+      projectHours: i === weeks - 1 ? 4 : 0,
+    }));
+    return JSON.stringify({
+      title: `Plan: ${input?.objective || "Objetivo"}`,
+      goal: input?.objective || "Objetivo",
+      level: input?.level || "No especificado",
+      hoursPerWeek,
+      durationWeeks: weeks,
+      blocks,
+      rubric: [
+        { criterion: "Cumple objetivos semanales", level: "Básico/Intermedio/Avanzado" },
+        { criterion: "Entrega de proyecto", level: "A tiempo y con calidad" },
+      ],
+      skills: ["Organización", "Pensamiento crítico", "Autonomía"],
+      roles: ["Jr. Trainee", "Jr. Assistant"],
+      salary: [
+        { role: "Jr. Assistant", currency: "USD", min: 700, max: 1200, period: "month", region: "LatAm (referencial)" },
+      ],
+      summary: `Plan de ${weeks} semanas a ${hoursPerWeek} h/semana para lograr: ${input?.objective || "tu meta"}.`,
     });
   }
 
@@ -108,34 +234,69 @@ async function callAIProvider(input) {
   if (!apiKey) return JSON.stringify({ _providerError: "GEMINI_API_KEY no está configurada" });
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const modelId = "gemini-2.5-flash";
+  const modelId = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const temperature = Number(process.env.GEMINI_TEMPERATURE) || 0.2;
 
-  const schemaHint = `
-Devuelve **solo JSON válido** sin texto extra. Esquema:
+  // Pedimos explícitamente el ESQUEMA RICO
+  const prompt = `
+Eres un planificador educativo experto.
+Devuelve **EXCLUSIVAMENTE JSON válido** (sin texto extra, sin markdown), con este esquema:
+
 {
-  "objective": string,
+  "title": string,
+  "goal": string,
   "level": string,
   "hoursPerWeek": number,
-  "weeks": number,
-  "weeksPlan": [
-    { "week": number, "goals": string[], "resources": any[], "tasks": any[] }
-  ]
+  "durationWeeks": number,
+  "blocks": [
+    {
+      "title": string,
+      "bullets": string[],
+      "project": string,
+      "role": string,
+      "lessonHours": number[],
+      "projectHours": number
+    }
+  ],
+  "rubric": [
+    { "criterion": string, "level": string }
+  ],
+  "skills": string[],
+  "roles": string[],
+  "salary": [
+    { "role": string, "currency": "USD", "min": number, "max": number, "period": "month" | "year", "region": string }
+  ],
+  "summary": string
 }
-`.trim();
 
-  const userPrompt = `
-Genera un plan de estudio según este input (responde en español neutro):
-${JSON.stringify(input, null, 2)}
+/*
+Reglas de horas:
+- Total aproximado ≈ hoursPerWeek * durationWeeks.
+- "lessonHours.length" === "bullets.length".
+- "projectHours" = 0 si no hay "project".
+- Usa números con 1 decimal como máximo cuando sea necesario (ej. 1.5).
+*/
 
-${schemaHint}
-`.trim();
+Datos del usuario:
+- objective: ${input?.objective}
+- level: ${input?.level}
+- hoursPerWeek: ${input?.hoursPerWeek}
+- weeks: ${input?.weeks}
+
+Entrega SOLO el JSON.`;
 
   try {
     const model = genAI.getGenerativeModel({ model: modelId });
     const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: userPrompt }]}],
-      generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
+      contents: [{ role: "user", parts: [{ text: prompt }]}],
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature,
+        // maxOutputTokens opcional según tu cuenta; si quieres:
+        // maxOutputTokens: 2200,
+      },
     });
+
     const text = result?.response?.text?.() ?? "";
     if (!text) throw new Error("Gemini devolvió respuesta vacía");
     return text;
@@ -153,23 +314,19 @@ app.post("/plan", async (req, res) => {
     if (!Number.isFinite(hpw) || hpw <= 0) return res.status(400).json({ error: "hoursPerWeek debe ser número > 0" });
     if (!Number.isFinite(wks) || wks <= 0) return res.status(400).json({ error: "weeks debe ser número > 0" });
 
-    const aiRawText = await callAIProvider({ objective, level, hoursPerWeek: hpw, weeks: wks });
-    const { data, error, source, raw } = normalizeAIJSON(aiRawText);
-    if (error) return res.status(502).json({ error: "AI invalid JSON", detail: error, sample: raw?.slice(0, 4000) || null });
+    // 1) Llamamos al proveedor pidiendo el esquema RICO
+    const aiRawText = await callAIProviderRich({ objective, level, hoursPerWeek: hpw, weeks: wks });
 
-    const shapeErr = validatePlanShape(data);
-    if (shapeErr) {
-      return res.status(200).json({
-        objective,
-        level: data?.level ?? level ?? "No especificado",
-        hoursPerWeek: data?.hoursPerWeek ?? hpw,
-        weeks: data?.weeks ?? wks,
-        weeksPlan: Array.isArray(data?.weeksPlan) ? data.weeksPlan : [],
-        _source: source || "unknown",
-        _note: `Esquema reparado: ${shapeErr}`
-      });
+    // 2) Normalizamos/parseamos
+    const { data, error, source, raw } = normalizeAIJSON(aiRawText);
+    if (error) {
+      return res.status(502).json({ error: "AI invalid JSON", detail: error, sample: raw?.slice(0, 4000) || null });
     }
-    return res.status(200).json({ ...data, _source: source });
+
+    // 3) Unificamos shape: si es rico, derivamos weeksPlan; si es simple, enriquecemos
+    const unified = unifyPlanShape(data);
+
+    return res.status(200).json({ ...unified, _source: source });
   } catch (err) {
     console.error("[/plan] Uncaught error:", err);
     return res.status(500).json({ error: "Internal error generating plan" });
