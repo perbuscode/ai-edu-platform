@@ -1,11 +1,69 @@
 // frontend/src/components/ChatPlanner.jsx
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import useChatWizard from "../hooks/useChatWizard.js";
 import StudyPlanModal from "./StudyPlanModal.jsx";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "../context/AuthContext.jsx";
-import { saveStudyPlan } from "../services/planService.js";
+import { saveStudyPlan, generatePlan } from "../services/planService.js";
 import { useToast } from "./Toast.jsx";
+
+/** Convierte el plan "simple" del backend
+ *  {
+ *    objective, level, hoursPerWeek, weeks,
+ *    weeksPlan: [{week, goals[], resources[], tasks[]}]
+ *  }
+ *  a un shape "rico" que muchos modales esperan
+ *  {
+ *    title, goal, level, hoursPerWeek, durationWeeks,
+ *    blocks: [{ title, bullets, project, role, lessonHours[], projectHours }],
+ *    rubric, skills, roles, salary, summary
+ *  }
+ */
+function normalizePlanForModal(raw) {
+  if (!raw || typeof raw !== "object") return null;
+
+  const objective = raw.objective ?? "Plan de estudio";
+  const level = raw.level ?? "No especificado";
+  const hoursPerWeek = Number(raw.hoursPerWeek ?? 6) || 6;
+  const durationWeeks = Number(raw.weeks ?? raw.durationWeeks ?? 4) || 4;
+
+  const blocks =
+    Array.isArray(raw.weeksPlan)
+      ? raw.weeksPlan.map(w => {
+          const title = `Semana ${w.week ?? "?"}`;
+          const bullets = Array.isArray(w.goals) ? w.goals : [];
+          // si hay N bullets y no vienen horas, rellena con 0
+          const lessonHours = new Array(bullets.length).fill(0);
+          return {
+            title,
+            bullets,
+            project: "",     // si luego agregas proyectos, se llena
+            role: "",        // idem
+            lessonHours,     // 1:1 con bullets
+            projectHours: 0, // 0 si no hay proyecto
+          };
+        })
+      : [];
+
+  return {
+    title: `Plan: ${objective}`,
+    goal: objective,
+    level,
+    hoursPerWeek,
+    durationWeeks,
+    blocks,
+    rubric: Array.isArray(raw.rubric) ? raw.rubric : [],
+    skills: Array.isArray(raw.skills) ? raw.skills : [],
+    roles: Array.isArray(raw.roles) ? raw.roles : [],
+    salary: Array.isArray(raw.salary) ? raw.salary : [],
+    summary:
+      typeof raw.summary === "string"
+        ? raw.summary
+        : `Plan de ${durationWeeks} semanas a ${hoursPerWeek} h/semana.`,
+    // Conserva el original por si el modal quiere leer el plan simple:
+    _raw: raw,
+  };
+}
 
 export default function ChatPlanner() {
   const [input, setInput] = useState("");
@@ -15,6 +73,7 @@ export default function ChatPlanner() {
 
   const [isPlanOpen, setPlanOpen] = useState(false);
   const [plan, setPlan] = useState(null);
+  const generatingRef = useRef(false); // evita llamadas duplicadas
 
   const suggestions = [
     "Power BI para BI Analyst",
@@ -29,8 +88,14 @@ export default function ChatPlanner() {
     "¿En cuántas semanas quieres lograrlo?",
   ];
 
-  // Detecta último plan del backend (inyectado por useChatWizard)
-  const lastAssistantPlan = useMemo(() => {
+  // Respuestas del usuario (últimas 4)
+  const userAnswers = useMemo(() => {
+    const ans = messages.filter(m => m.role === "user").map(m => m.content || m.text || "");
+    return ans.slice(-4);
+  }, [messages]);
+
+  // Si el hook ya adjunta un plan en un mensaje del asistente, úsalo:
+  const wizardPlan = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
       if (m?.role === "assistant" && m?.plan) return m.plan;
@@ -38,29 +103,60 @@ export default function ChatPlanner() {
     return null;
   }, [messages]);
 
-  // Cuando hay plan nuevo -> abrir modal
+  // Abrir modal si el hook ya inyectó un plan (por compatibilidad)
   useEffect(() => {
-    if (!lastAssistantPlan) return;
-    setPlan(lastAssistantPlan);
+    if (!wizardPlan) return;
+    const normalized = normalizePlanForModal(wizardPlan) || wizardPlan;
+    setPlan(normalized);
     setPlanOpen(true);
-  }, [lastAssistantPlan]);
+  }, [wizardPlan]);
+
+  // 🚀 Plan “seguro”: en cuanto haya 4 respuestas, llama a /plan tú mismo,
+  // así no dependes de que el hook adjunte m.plan.
+  const maybeGeneratePlan = useCallback(async () => {
+    if (generatingRef.current) return;
+    if (wizardPlan) return; // ya lo trajo el hook
+    if (userAnswers.length < 4) return;
+
+    const [objective, level, hoursStr, weeksStr] = userAnswers;
+    const hoursPerWeek = Number(hoursStr);
+    const weeks = Number(weeksStr);
+
+    if (!objective || !Number.isFinite(hoursPerWeek) || !Number.isFinite(weeks)) return;
+
+    try {
+      generatingRef.current = true;
+      const rawPlan = await generatePlan(
+        { objective, level, hoursPerWeek, weeks },
+        { timeoutMs: 120000, retries: 0, allowAbort: false }
+      );
+      const normalized = normalizePlanForModal(rawPlan) || rawPlan;
+      setPlan(normalized);
+      setPlanOpen(true);
+    } catch (err) {
+      console.error("[ChatPlanner] Error generando plan /plan:", err);
+      toast.error(err?.message || "No se pudo generar el plan. Intenta de nuevo.");
+    } finally {
+      generatingRef.current = false;
+    }
+  }, [userAnswers, wizardPlan, toast]);
+
+  useEffect(() => { maybeGeneratePlan(); }, [maybeGeneratePlan]);
 
   async function handleSavePlan(planToSave) {
-    if (!user) {
-      toast.error("Necesitas iniciar sesión para guardar tu plan.");
-      return;
-    }
+    // Tu servicio saveStudyPlan(plan) no recibe uid; guarda localmente o
+    // más adelante podrás conectarlo a un endpoint real.
     try {
       await saveStudyPlan(
         {
-          objective: planToSave?.objective,
-          level: planToSave?.level,
-          hoursPerWeek: planToSave?.hoursPerWeek,
-          weeks: planToSave?.weeks,
+          objective: planToSave?._raw?.objective ?? planToSave?.goal ?? "Plan",
+          level: planToSave?.level ?? "No especificado",
+          hoursPerWeek: planToSave?.hoursPerWeek ?? 6,
+          weeks: planToSave?.durationWeeks ?? planToSave?._raw?.weeks ?? 4,
         },
         { timeoutMs: 120000 }
       );
-      toast.success("¡Plan guardado en tu perfil!");
+      toast.success("¡Plan guardado!");
       setPlanOpen(false);
     } catch (error) {
       console.error("Error saving plan:", error);
@@ -149,10 +245,7 @@ export default function ChatPlanner() {
 
             {/* Chat */}
             <div className="md:col-span-3 bg-white rounded-2xl p-5 shadow-2xl border border-slate-200 relative h-[480px] flex flex-col overflow-hidden">
-              <div
-                ref={listRef}
-                className="space-y-3 flex-1 overflow-auto pr-1"
-              >
+              <div ref={listRef} className="space-y-3 flex-1 overflow-auto pr-1">
                 {messages.map((m, i) => (
                   <div
                     key={i}
@@ -207,10 +300,10 @@ export default function ChatPlanner() {
                   </div>
                   <button
                     className="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-60"
-                    disabled={loadingPlan}
-                    aria-busy={loadingPlan || undefined}
+                    disabled={loadingPlan || generatingRef.current}
+                    aria-busy={loadingPlan || generatingRef.current || undefined}
                   >
-                    {loadingPlan ? "Generando…" : "Enviar"}
+                    {loadingPlan || generatingRef.current ? "Generando…" : "Enviar"}
                   </button>
                 </div>
               </form>
@@ -221,7 +314,7 @@ export default function ChatPlanner() {
                     key={s}
                     onClick={() => setInput(s)}
                     className="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
-                    disabled={loadingPlan}
+                    disabled={loadingPlan || generatingRef.current}
                   >
                     {s}
                   </button>
@@ -232,7 +325,7 @@ export default function ChatPlanner() {
         </div>
       </section>
 
-      {/* Modal del plan (responde con el JSON del backend) */}
+      {/* Modal del plan */}
       <StudyPlanModal
         plan={plan}
         isOpen={isPlanOpen}
