@@ -13,6 +13,7 @@ import NextClasses from "../sections/NextClasses";
 import SkillsMap from "../sections/SkillsMap";
 import Employability from "../sections/Employability";
 import SkillsWallet from "../sections/SkillsWallet";
+import DashboardSnapshot from "../components/DashboardSnapshot";
 // import Certifications from "../sections/Certifications";
 
 export default function Dashboard() {
@@ -66,6 +67,11 @@ export default function Dashboard() {
       <SkillsMap observe={observe} />
       <Employability observe={observe} />
       {false && <SkillsWallet observe={observe} />}
+
+      <section className="bg-white rounded-xl shadow-xl border border-slate-200 p-6 text-slate-900">
+        <h3 className="text-xl font-semibold text-slate-900 mb-4">Dashboard Snapshot (Dev)</h3>
+        <DashboardSnapshot />
+      </section>
     </DashboardLayout>
   );
 }

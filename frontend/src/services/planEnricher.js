@@ -1,68 +1,73 @@
-// frontend/src/services/planEnricher.js
-import { askGemini } from "./geminiClient";
-
-/**
- * Extrae las últimas 4 respuestas del usuario desde el historial
- * (objetivo, nivel, horas/semana, semanas).
- */
-function extractWizardAnswers(messages) {
-  const answers = messages
-    .filter((m) => m.role === "user")
-    .slice(-4)
-    .map((m) => m.content || m.text || "");
-  const [goal, level, hoursPerWeek, weeks] = answers;
-  return { goal, level, hoursPerWeek, weeks };
+function mapTaskToProject(t, meta = {}) {
+  return {
+    id: t.id ?? `task-${meta.week ?? meta.module ?? 'x'}-${meta.index ?? 0}`,
+    title: t.title ?? t.name ?? 'Proyecto',
+    summary: t.summary ?? t.description ?? '',
+    deliverable: t.deliverable ?? t.output ?? '',
+    rubric: t.rubric ?? null,
+    estimatedHours: t.estimatedHours ?? t.hours ?? null,
+    tags: t.tags ?? [],
+    // conserva campos crudos por si el modal los usa
+    _raw: t
+  };
 }
 
-/**
- * Construye el prompt de enriquecimiento combinando:
- * - El plan JSON devuelto por tu backend (estructura base)
- * - Las 4 respuestas del usuario (contexto)
- */
-function buildEnrichmentPrompt(plan, messages) {
-  const { goal, level, hoursPerWeek, weeks } = extractWizardAnswers(messages);
-
-  return [
-    "Eres un planificador instruccional experto. Recibirás un plan base en JSON (estructura) y contexto del alumno.",
-    "Tu tarea: devolver SOLO un plan enriquecido en Markdown (sin charla extra), manteniendo la estructura por semanas y añadiendo:",
-    "- Objetivos SMART por semana",
-    "- Recursos concretos (docs oficiales, cursos MOOC, artículos), con enlaces en Markdown",
-    "- Ejercicios prácticos y criterios de evaluación",
-    "- Consejos de gestión del tiempo y hábitos",
-    "Sé conciso pero útil. Evita párrafos gigantes; usa bullets y subtítulos.",
-    "",
-    "Contexto del alumno:",
-    `- Objetivo/tema: ${goal || "(no especificado)"}`,
-    `- Nivel actual: ${level || "(no especificado)"}`,
-    `- Horas por semana: ${hoursPerWeek || "(no especificado)"}`,
-    `- Semanas objetivo: ${weeks || "(no especificado)"}`,
-    "",
-    "Plan base (JSON):",
-    "```json",
-    JSON.stringify(plan, null, 2),
-    "```",
-    "",
-    "Devuelve el plan enriquecido en Markdown con este esquema:",
-    "## Resumen",
-    "- Objetivo, duración, horas/semana",
-    "",
-    "## Plan por semanas",
-    "- Semana 1: objetivos SMART, contenidos, ejercicios, recursos (links), criterios de éxito",
-    "- Semana 2: ...",
-    "",
-    "## Recursos globales y buenas prácticas",
-    "- …",
-  ].join("\n");
+function mapProject(p, meta = {}) {
+  return {
+    id: p.id ?? `proj-${meta.week ?? meta.module ?? 'x'}-${meta.index ?? 0}`,
+    title: p.title ?? p.name ?? 'Proyecto',
+    summary: p.summary ?? p.description ?? '',
+    deliverable: p.deliverable ?? p.output ?? '',
+    rubric: p.rubric ?? null,
+    estimatedHours: p.estimatedHours ?? p.hours ?? null,
+    tags: p.tags ?? [],
+    _raw: p
+  };
 }
 
-/**
- * Enriquecedor: llama a Gemini con el prompt construido.
- * @param {object} plan - Plan JSON devuelto por el backend (generatePlan)
- * @param {Array} messages - Historial del wizard para extraer contexto
- * @returns {Promise<string>} Markdown enriquecido
- */
-export async function enrichPlanWithGemini(plan, messages) {
-  const prompt = buildEnrichmentPrompt(plan, messages);
-  const enrichedMarkdown = await askGemini(prompt);
-  return enrichedMarkdown;
+export function normalizeProjects(plan) {
+  const blocks = [];
+
+  // 1) weeksPlan[].tasks -> blocks[].project
+  if (Array.isArray(plan?.weeksPlan)) {
+    plan.weeksPlan.forEach((week, wi) => {
+      const tasks = week?.tasks ?? [];
+      tasks.forEach((t, ti) => {
+        const isProject =
+          t?.type?.toLowerCase?.() === 'project' ||
+          t?.isProject === true ||
+          t?.category?.toLowerCase?.() === 'project';
+        if (isProject) {
+          blocks.push({
+            week: wi + 1,
+            project: mapTaskToProject(t, { week: wi + 1, index: ti })
+          });
+        }
+      });
+    });
+  }
+
+  // 2) modules[].projects -> blocks[].project
+  if (Array.isArray(plan?.modules)) {
+    plan.modules.forEach((m, mi) => {
+      const projects = m?.projects ?? [];
+      projects.forEach((p, pi) => {
+        blocks.push({
+          module: mi + 1,
+          project: mapProject(p, { module: mi + 1, index: pi })
+        });
+      });
+    });
+  }
+
+  // 3) Passthrough si ya viene normalizado
+  if (Array.isArray(plan?.blocks)) {
+    plan.blocks.forEach((b) => {
+      if (b?.project) {
+        blocks.push(b);
+      }
+    });
+  }
+
+  return { blocks };
 }

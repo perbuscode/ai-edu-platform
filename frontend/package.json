@@ -9,6 +9,7 @@
     "@heroicons/react": "^2.2.0",
     "aos": "^2.3.4",
     "firebase": "^10.12.4",
+    "framer-motion": "^12.23.22",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.544.0",
     "qrcode": "^1.5.4",

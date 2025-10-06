@@ -1,83 +1,50 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import PropTypes from "prop-types";
-import {
-  getCourses,
-  getMetrics,
-  getSkillsMap,
-  getStudyPlan,
-} from "../services/dashboard";
+// src/context/DashboardProvider.jsx
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { getMetrics, getCourses, getSkillsMap } from "../services/dashboard.real";
 
-const DashboardContext = createContext(undefined);
+const DashboardContext = createContext(null);
 
 export function DashboardProvider({ children }) {
   const [metrics, setMetrics] = useState(null);
   const [courses, setCourses] = useState(null);
-  const [skills, setSkills] = useState(null);
-  const [studyPlan, setStudyPlan] = useState(null);
+  const [skillsMap, setSkillsMap] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [nextMetrics, nextCourses, nextSkills, nextStudyPlan] =
-        await Promise.all([
-          getMetrics(),
-          getCourses(),
-          getSkillsMap(),
-          getStudyPlan(),
-        ]);
-      setMetrics(nextMetrics);
-      setCourses(nextCourses);
-      setSkills(nextSkills);
-      setStudyPlan(nextStudyPlan);
-    } catch (err) {
-      setError(err?.message || "Error al cargar datos");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Evita doble fetch por StrictMode en dev
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
+    let isMounted = true;
+
+    async function load() {
+      setLoading(true);
+      const [mRes, cRes, sRes] = await Promise.allSettled([
+        getMetrics(),
+        getCourses(),
+        getSkillsMap(),
+      ]);
+
+      if (!isMounted) return;
+
+      setMetrics(mRes.status === "fulfilled" ? mRes.value : null);
+      setCourses(cRes.status === "fulfilled" ? cRes.value : null);
+      setSkillsMap(sRes.status === "fulfilled" ? sRes.value : null);
+      setLoading(false);
+    }
+
     load();
-  }, [load]);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  const value = useMemo(
-    () => ({
-      metrics,
-      courses,
-      skills,
-      studyPlan,
-      loading,
-      error,
-      refresh: load,
-    }),
-    [metrics, courses, skills, studyPlan, loading, error, load]
-  );
-
-  return (
-    <DashboardContext.Provider value={value}>
-      {children}
-    </DashboardContext.Provider>
-  );
+  const value = { metrics, courses, skillsMap, loading };
+  return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 }
 
-DashboardProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
-
 export function useDashboard() {
-  const context = useContext(DashboardContext);
-  if (!context) {
-    throw new Error("useDashboard debe usarse dentro de <DashboardProvider>");
-  }
-  return context;
+  return useContext(DashboardContext);
 }

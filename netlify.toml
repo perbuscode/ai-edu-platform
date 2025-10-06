@@ -1,5 +1,9 @@
+# netlify.toml — Frontend CRA en /frontend, SIN redirecciones a Functions
+
+# (Opcional) Mantener Functions disponibles, pero NO las usamos para /plan.
+# Si no usas ninguna Function, puedes borrar este bloque y la carpeta.
 [functions]
-directory = "netlify/functions"
+  directory = "netlify/functions"
 
 [build]
   base = "frontend"
@@ -9,3 +13,10 @@ directory = "netlify/functions"
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--legacy-peer-deps"
+
+# SPA fallback: cualquier ruta de la app (no-API) va a index.html
+# IMPORTANTE: NO hay redirección a "/.netlify/functions/plan" ni a otras Functions.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

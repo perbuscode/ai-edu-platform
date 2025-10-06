@@ -313,6 +313,58 @@ app.post("/plan", async (req, res) => {
   }
 });
 
+// --- Mock Endpoints for Dashboard ---
+app.get("/skills-map", (_req, res) => {
+  res.json({
+    competencies: [
+      { id: "js-basics", name: "JavaScript Básico", level: 2, target: 4 },
+      { id: "react", name: "React", level: 1, target: 3 }
+    ],
+    missions: [
+      { id: "m1", title: "Fundamentos JS", points: 50 },
+      { id: "m2", title: "Componentes en React", points: 75 }
+    ],
+    updatedAt: "2025-10-02T12:00:00.000Z"
+  });
+});
+
+app.get("/courses", (_req, res) => {
+  res.json([
+    { id: "c101", title: "JS desde cero", provider: "Edvance", progress: 0.4 },
+    { id: "c102", title: "React para principiantes", provider: "Edvance", progress: 0.1 }
+  ]);
+});
+
+app.get('/metrics', (req, res) => {
+  res
+    .type('application/json; charset=utf-8')
+    .status(200)
+    .json({
+      kpis: {
+        activeCourses: 2,
+        completedMissions: 5,
+        weeklyStudyHours: 6,
+        skillGrowth: 12
+      },
+      trends: {
+        weeklyHours: [
+          { week: '2025-09-08', hours: 4 },
+          { week: '2025-09-15', hours: 5 },
+          { week: '2025-09-22', hours: 6 },
+          { week: '2025-09-29', hours: 7 }
+        ],
+        missionsPerWeek: [
+          { week: '2025-09-08', count: 1 },
+          { week: '2025-09-15', count: 1 },
+          { week: '2025-09-22', count: 2 },
+          { week: '2025-09-29', count: 1 }
+        ]
+      },
+      updatedAt: new Date().toISOString()
+    });
+});
+
+
 // --- Debug: listar rutas al arrancar ---
 function printRoutes(app) {
   const routes = [];
